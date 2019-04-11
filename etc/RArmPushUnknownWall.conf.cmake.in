@@ -54,14 +54,14 @@
         "box": {
             "module": "object",
             "params": [
-                "/home/yuquan/catkin_ws/src/mc_rtc_ros_data/mc_int_obj_description",
+                "${MC_INT_OBJ_DESCRIPTION_PATH}",
                 "big_box"
             ]
         },
         "ground":
         {
           "module": "env",
-          "params": ["@MC_ENV_DESCRIPTION@", "ground"]
+          "params": ["${MC_ENV_DESCRIPTION_PATH}", "ground"]
         }
     },
     "constraints": [
