@@ -20,7 +20,7 @@ void DynamicContactState::start(mc_control::fsm::Controller & ctlInput)
 			ctl.config()("hrp4")("rightEfTask")("stiffness"),
 			ctl.config()("hrp4")("rightEfTask")("weight")
 			);
-
+	/*
 	std::vector<std::string> right_joints = {
 		"R_SHOULDER_P",
 		"R_SHOULDER_R",
@@ -31,6 +31,7 @@ void DynamicContactState::start(mc_control::fsm::Controller & ctlInput)
 		"R_WRIST_R"
 	};
 	rPosTaskPtr_->selectActiveJoints(ctl.solver(), right_joints);
+	*/
 	ctl.solver().addTask(rPosTaskPtr_);
 
 	//rTransformZero_ = rPosTaskPtr_->get_ef_pose();
@@ -66,6 +67,7 @@ void DynamicContactState::teardown(mc_control::fsm::Controller & ctl_ )
 {
 	auto & ctl = static_cast<Controller&>(ctl_);
 	ctl.solver().removeTask(rPosTaskPtr_);
+	ctl.solver().removeTask(ctl.comTaskPtr);
 
 
 }
