@@ -1,4 +1,4 @@
-# pragma once 
+# pragma once
 
 # include <mc_control/fsm/State.h>
 # include <mc_tasks/EndEffectorTask.h>
@@ -14,4 +14,5 @@ struct PrepareHandState: mc_control::fsm::State{
 	std::shared_ptr<mc_tasks::EndEffectorTask> rEfTaskPtr_;
 	sva::PTransformd rTransformZero_;
 	double efThreshold_;
+  double rEfStiffness_;
 };

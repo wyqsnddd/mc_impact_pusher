@@ -12,7 +12,7 @@ void PrepareHandState::configure(const mc_rtc::Configuration & config){
 
 
 void PrepareHandState::start(mc_control::fsm::Controller& ctlInput){
-	
+
 	auto & ctl = static_cast<Controller&>(ctlInput);
 
 	rEfTaskPtr_ = std::make_shared<mc_tasks::EndEffectorTask>(
@@ -22,7 +22,7 @@ void PrepareHandState::start(mc_control::fsm::Controller& ctlInput){
 			ctl.config()("hrp4")("rightEfTask")("stiffness"),
 			ctl.config()("hrp4")("rightEfTask")("weight")
 			);
-	
+
 	std::vector<std::string> right_joints = {
 		"R_SHOULDER_P",
 		"R_SHOULDER_R",
@@ -33,7 +33,7 @@ void PrepareHandState::start(mc_control::fsm::Controller& ctlInput){
 		"R_WRIST_R"
 	};
 	rEfTaskPtr_->selectActiveJoints(ctl.solver(), right_joints);
-	
+
 	ctl.solver().addTask(rEfTaskPtr_);
 
 	// Set the contacts between the feet and the ground
@@ -52,7 +52,7 @@ void PrepareHandState::start(mc_control::fsm::Controller& ctlInput){
 
 	Eigen::Vector3d translation_offset;
 	translation_offset = ctl.config()("states")("Prepare")("raiseHandOffset");
-	// We need to 
+	// We need to
 	//auto desiredRotation =  sva::RotY(-M_PI*2/3);
 	auto desiredRotation =  sva::RotY(-M_PI/2);
 	//auto desiredRotation =  sva::RotZ(-M_PI/2);
@@ -67,7 +67,7 @@ void PrepareHandState::start(mc_control::fsm::Controller& ctlInput){
 bool PrepareHandState::run(mc_control::fsm::Controller & ctl){
 	if( rEfTaskPtr_->eval().norm() <= efThreshold_)
 	{
-		// Output the transition signal such that we can move on according to the transitions 
+		// Output the transition signal such that we can move on according to the transitions
 		output("RightHandReady");
 		return true;
 	}
