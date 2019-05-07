@@ -1,6 +1,10 @@
 #pragma once 
 
 # include <mc_control/fsm/Controller.h>
+#include <mc_rbdyn/RobotModule.h>
+#include <mc_rbdyn/RobotLoader.h>
+#include <mc_rbdyn/Robots.h>
+
 
 
 struct Controller : public mc_control::fsm::Controller
@@ -10,6 +14,7 @@ struct Controller : public mc_control::fsm::Controller
 	void reset(const mc_control::ControllerResetData & data) override;
 	
 	std::shared_ptr<mc_tasks::MetaTask> comTaskPtr;
+	mc_rbdyn::Robots robotsGRF_;
 
 	// Force sensor threshold
 	double forceThreshold = 3.0;
@@ -17,4 +22,5 @@ struct Controller : public mc_control::fsm::Controller
 	bool firstContact = true;
 
 	bool rArmInContact();
+	
 };

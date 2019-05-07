@@ -53,9 +53,8 @@ void PrepareHandState::start(mc_control::fsm::Controller& ctlInput){
 	Eigen::Vector3d translation_offset;
 	translation_offset = ctl.config()("states")("Prepare")("raiseHandOffset");
 	// We need to 
-	//auto desiredRotation =  sva::RotY(-M_PI*2/3);
-	auto desiredRotation =  sva::RotY(-M_PI/2);
-	//auto desiredRotation =  sva::RotZ(-M_PI/2);
+	//auto desiredRotation =  sva::RotY(-M_PI/2);
+	auto desiredRotation =  sva::RotZ(-M_PI/2);
 
 	//desiredRotation = sva::RotY(-M_PI/2)
 	sva::PTransformd right_raise_hand( desiredRotation*rTransformZero_.rotation().inverse(), translation_offset);
