@@ -1,4 +1,4 @@
-#pragma once 
+#pragma once
 
 # include <mc_control/fsm/Controller.h>
 #include <mc_rbdyn/RobotModule.h>
@@ -12,7 +12,7 @@ struct Controller : public mc_control::fsm::Controller
 	Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, const mc_rtc::Configuration & conf);
 
 	void reset(const mc_control::ControllerResetData & data) override;
-	
+
 	std::shared_ptr<mc_tasks::MetaTask> comTaskPtr;
 	mc_rbdyn::Robots robotsGRF_;
 
@@ -22,5 +22,6 @@ struct Controller : public mc_control::fsm::Controller
 	bool firstContact = true;
 
 	bool rArmInContact();
-	
+ private:
+  const mc_rbdyn::Robot & realRobot() const;
 };
