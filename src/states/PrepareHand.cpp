@@ -64,7 +64,12 @@ void PrepareHandState::start(mc_control::fsm::Controller& ctlInput){
 
 }
 
-bool PrepareHandState::run(mc_control::fsm::Controller & ctl){
+bool PrepareHandState::run(mc_control::fsm::Controller & ctlInput){
+
+ 	auto & ctl = static_cast<Controller&>(ctlInput);
+	std::cout<<"About to update predictor "<<std::endl;
+	ctl.miPredictorPtr->run();
+
 	if( rEfTaskPtr_->eval().norm() <= efThreshold_)
 	{
 		// Output the transition signal such that we can move on according to the transitions

@@ -20,6 +20,7 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
       Eigen::Vector3d cop = robot.copW("RightFoot");
       return cop;
     });
+  /*
   logger().addLogEntry("ZMP_World",
     [this]()
     {
@@ -35,6 +36,7 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
       }
       return zmp;
     });
+    */
   logger().addLogEntry("realRobot_posW",
       [this]()
       {
@@ -65,14 +67,26 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
         const sva::PTransformd X_0_s = robot.surface("RightFoot").X_0_s(robot);
         sva::PTransformd surface(X_0_s.rotation(), cop);
         return surface;
-      }),
+      })
+  /*
     mc_rtc::gui::Point3D("ZMP_real",
       [this]() {
         return realRobot().zmp({"LeftFootForceSensor", "RightFootForceSensor"}, Eigen::Vector3d::Zero(), Eigen::Vector3d{0.,0.,1.}, 100);
       })
-    );
-
->>>>>>> 5cb74ee8e7abdf51b031d294c4bc192f90ae600a
+      */
+  );
+    
+    std::cout<<"Operational space dynamics Predictor is about to be created."<<std::endl;
+    std::string impactBodyName("r_wrist");
+    //auto tempRobotPtr = std::make_shared<mc_rbdyn::Robot>(realRobot());
+    //auto& robot = this->realRobots().robot();
+    //miPredictorPtr = std::make_unique<mi_impactPredictor>(robot, impactBodyName, solver().dt());
+    bool useLinearJacobian = true;
+    miPredictorPtr.reset(
+		    new mi_impactPredictor(robot(), impactBodyName, useLinearJacobian, solver().dt())
+		    );
+    //logger().info('Operational space dynamics Predictor is created. ');
+    std::cout<<"Operational space dynamics Predictor is created."<<std::endl;
 }
 
 const mc_rbdyn::Robot& Controller::realRobot() const

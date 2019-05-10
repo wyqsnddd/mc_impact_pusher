@@ -6,6 +6,7 @@
 
 struct PrepareHandState: mc_control::fsm::State{
 	void configure(const mc_rtc::Configuration & config) override;
+
 	void start(mc_control::fsm::Controller&) override;
 	bool run(mc_control::fsm::Controller&) override;
 	void teardown(mc_control::fsm::Controller&) override;

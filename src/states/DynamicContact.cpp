@@ -47,9 +47,13 @@ void DynamicContactState::start(mc_control::fsm::Controller & ctlInput)
   }
 }
 
-bool DynamicContactState::run(mc_control::fsm::Controller & ctl)
+bool DynamicContactState::run(mc_control::fsm::Controller & ctlInput)
 {
 	// std::cout<<"The left ef error is: "<< lEfTaskPtr_->eval().norm() << ", the right ef error is: " << rEfTaskPtr_->eval().norm() <<std::endl;
+ 	auto & ctl = static_cast<Controller&>(ctlInput);
+
+	ctl.miPredictorPtr->run();
+
 	if( rPosTaskPtr_->eval().norm() <= 0.01)
 	{
 		// Output the transition signal such that we can move on according to the transitions
