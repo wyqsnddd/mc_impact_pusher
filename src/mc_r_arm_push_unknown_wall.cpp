@@ -68,7 +68,17 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
       }),
     mc_rtc::gui::Point3D("ZMP_real",
       [this]() {
-        return realRobot().zmp({"LeftFootForceSensor", "RightFootForceSensor"}, Eigen::Vector3d::Zero(), Eigen::Vector3d{0.,0.,1.}, 100);
+        auto& robot = this->realRobots().robot();
+        Eigen::Vector3d zmp;
+        try
+        {
+          zmp = robot.zmp({"LeftFootForceSensor", "RightFootForceSensor"}, Eigen::Vector3d::Zero(), Eigen::Vector3d{0.,0.,1.}, 100);
+          zmp.z() = 0;
+        } catch(...)
+        {
+          zmp.setZero();
+        }
+        return zmp;
       })
     );
 
