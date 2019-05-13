@@ -11,6 +11,7 @@ macro(add_state state_name)
     add_library(${state_name} SHARED src/states/${state_name}.cpp src/states/${state_name}.h)
     set_target_properties(${state_name} PROPERTIES PREFIX "")
     target_link_libraries(${state_name} mc_control_fsm)
+    target_link_libraries(${state_name} mc_impact_predictor)
     target_link_libraries(${state_name} ${LIB_NAME})
     install(TARGETS ${state_name}
       DESTINATION "${MC_RTC_LIBDIR}/mc_controller/r_arm_push_unknown_wall/states")
