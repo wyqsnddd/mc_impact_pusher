@@ -76,13 +76,68 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
     );
   std::cout << "Operational space dynamics Predictor is about to be created." << std::endl;
   std::string impactBodyName("r_wrist");
-  // auto tempRobotPtr = std::make_shared<mc_rbdyn::Robot>(realRobot());
-  //auto& robot = this->realRobots().robot();
-  //miPredictorPtr = std::make_unique<mi_impactPredictor>(robot, impactBodyName, solver().dt());
+  
   bool useLinearJacobian = true;
-  miPredictorPtr.reset(new mi_impactPredictor(robot(), impactBodyName, useLinearJacobian, solver().dt()));
-  //logger().info('Operational space dynamics Predictor is created. ');
+   miPredictorPtr.reset(new mi_impactPredictor(robot(), impactBodyName, useLinearJacobian, solver().dt()));
+  //logger().log('Operational space dynamics Predictor is created. ');
   std::cout << "Operational space dynamics Predictor is created." << std::endl;
+
+  logger().addLogEntry("ee_Vel_impact_jump", [this]() {
+    Eigen::Vector3d eeVelJump=this->miPredictorPtr->getEeVelocityJump();
+    return eeVelJump;
+  });
+  logger().addLogEntry("ee_Vel", [this]() {
+    Eigen::Vector3d eeVel= this->realRobots().robot().mbc().bodyVelW
+	    [
+	    realRobots().robot().mb().bodyIndexByName("r_wrist")
+	    ].linear();
+
+    return eeVel;
+  });
+
+
+  logger().addLogEntry("l_ankle_Vel_impact_jump", [this]() {
+    Eigen::Vector3d eeVelJump=this->miPredictorPtr->getEeVelocityJump("l_ankle");
+    return eeVelJump;
+  });
+  logger().addLogEntry("r_ankle_Vel_impact_jump", [this]() {
+    Eigen::Vector3d eeVelJump=this->miPredictorPtr->getEeVelocityJump("r_ankle");
+    return eeVelJump;
+  });
+
+  logger().addLogEntry("ee_impact_impulse", [this]() {
+    Eigen::Vector3d eeImpulse =this->miPredictorPtr->getImpulsiveForce();
+    return eeImpulse;
+  });
+
+  logger().addLogEntry("l_ankle_predict_impact_impulse", [this]() {
+    Eigen::Vector3d ankleImpulse =this->miPredictorPtr->getImpulsiveForce("l_ankle");
+    return ankleImpulse;
+  });
+
+  logger().addLogEntry("l_ankle_ee_acc_force", [this]() {
+    Eigen::Vector3d ankleAccForce=this->miPredictorPtr->getEeAccForce("l_ankle");
+    return ankleAccForce;
+  });
+ 
+  logger().addLogEntry("r_ankle_ee_acc_force", [this]() {
+    Eigen::Vector3d ankleAccForce=this->miPredictorPtr->getEeAccForce("r_ankle");
+    return ankleAccForce;
+  });
+ 
+  logger().addLogEntry("r_ankle_predict_impact_impulse", [this]() {
+    Eigen::Vector3d ankleImpulse =this->miPredictorPtr->getImpulsiveForce("r_ankle");
+    return ankleImpulse;
+  });
+  
+
+  logger().addLogEntry("q_vel_predict_impact_jump", [this]() {
+    Eigen::VectorXd qveljump =this->miPredictorPtr->getJointVelocityJump();
+    return qveljump;
+  });
+
+
+
   // Add constriants:
   std::cout << "Kinematics and Dynamics constraints are created." << std::endl;
   solver().addConstraintSet(kinematicsConstraint);

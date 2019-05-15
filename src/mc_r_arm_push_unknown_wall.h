@@ -5,6 +5,7 @@
 #include <mc_rbdyn/RobotModule.h>
 #include <mc_rbdyn/Robots.h>
 
+
 struct Controller : public mc_control::fsm::Controller
 {
   Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, const mc_rtc::Configuration & conf);
