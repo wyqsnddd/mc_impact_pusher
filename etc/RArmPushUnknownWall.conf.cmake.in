@@ -141,7 +141,11 @@
         "pushDepth":  [1.0, 0.0, 0.0], // Target position that should generate the impact 
         // Velocity control for the end-effector
         "rightEfStiffness": 0.0,
-        "rightEfDamping": 300.0
+        "rightEfDamping": 300.0,
+	"coeRestitution": 0.8,
+	"useLinearJacobian": true,
+	"impactBodyName": "r_wrist",
+	"end-effectors": ["l_ankle", "r_ankle", "body", "l_wrist", "r_wrist"]
       },
       "Final": { "base": "Pause", "placeholderParameter": 0.1 }
     },
