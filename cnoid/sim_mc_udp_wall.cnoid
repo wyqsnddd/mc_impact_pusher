@@ -285,7 +285,7 @@ views:
           far: 10000
           eye: [ -0.0879828569, 3.3921885, 2.48821758 ]
           direction: [ -0.0267214488, -0.867407691, -0.496880128 ]
-          up: [ -0.0152996812, -0.496644522, 0.867819186 ]
+          up: [ -0.0152996812, -0.496644522, 0.867819185 ]
         - 
           camera: [ System, Orthographic ]
           orthoHeight: 20
@@ -412,8 +412,6 @@ toolbars:
     speedScale: 1
     syncToOngoingUpdates: true
     autoExpansion: true
-  "LeggedBodyBar": 
-    stanceWidth: 0.15
   "KinematicsBar": 
     mode: IK
     enablePositionDragger: true
@@ -424,6 +422,8 @@ toolbars:
     lazyCollisionDetectionMode: true
   "BodyBar": 
     current: 8
+  "LeggedBodyBar": 
+    stanceWidth: 0.15
   "BodyMotionGenerationBar": 
     autoGenerationForNewBody: true
     balancer: false
@@ -504,17 +504,17 @@ viewAreas:
     contents: 
       type: splitter
       orientation: horizontal
-      sizes: [ 1598, 312 ]
+      sizes: [ 1547, 302 ]
       children: 
         - 
           type: splitter
           orientation: vertical
-          sizes: [ 738, 198 ]
+          sizes: [ 781, 210 ]
           children: 
             - 
               type: splitter
               orientation: horizontal
-              sizes: [ 284, 1308 ]
+              sizes: [ 275, 1266 ]
               children: 
                 - 
                   type: pane
@@ -531,7 +531,7 @@ viewAreas:
         - 
           type: splitter
           orientation: vertical
-          sizes: [ 468, 468 ]
+          sizes: [ 496, 495 ]
           children: 
             - 
               type: pane

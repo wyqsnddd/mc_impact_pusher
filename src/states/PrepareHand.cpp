@@ -49,9 +49,9 @@ void PrepareHandState::start(mc_control::fsm::Controller & ctlInput)
 bool PrepareHandState::run(mc_control::fsm::Controller & ctlInput)
 {
 
-  // auto & ctl = static_cast<Controller &>(ctlInput);
-  // std::cout << "About to update predictor " << std::endl;
-  // ctl.miPredictorPtr->run();
+  auto & ctl = static_cast<Controller &>(ctlInput);
+  std::cout << "About to update predictor " << std::endl;
+  ctl.miPredictorPtr->run();
 
   if(rEfTaskPtr_->eval().norm() <= efThreshold_)
   {
@@ -67,6 +67,7 @@ void PrepareHandState::teardown(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<Controller &>(ctl_);
   ctl.solver().removeTask(rEfTaskPtr_);
+  //ctl.miPredictorPtr->resetDataStructure();
 }
 
 EXPORT_SINGLE_STATE("PrepareHand", PrepareHandState)

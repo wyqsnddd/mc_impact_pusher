@@ -17,9 +17,21 @@ choreonoid ~/mc_controllers/mc_impact_control/non_ros_controller/mc_impact_contr
 or simply: choreonoid sim_mc_udp.cnoid
 
 
+1.1 Liftbox/Pushbox controller: 
+choreonoidhrp4 sim_mc_udp_pushbox.cnoid
+1.2 If we need to modify the controller, we can go to the run_fsm.conf file. 
+   (1) Use the first line of the transition map if we need to switch for "push box".
+   (2) Swap the push_box and capboard_box, the first one of them will be used for the controller. 
+
+1.3 If we need to modify the choreonoid simulation environment, we can try to modify the *.wrl files, e.g. CarpboardBox.wrl.
+
+1.4 If we want to change the box, we can run the script: make_box.py  
+
 2. Run the controller: 
 
 MCUDPControl -h localhost -f ~/mc_controllers/mc_impact_control/non_ros_controller/mc_impact_controller/src/r_arm_push_unknown_wall/etc/mc_rtc.conf
+
+
 
 
 3. Plotter: 
@@ -38,3 +50,12 @@ cd mc_box_grabbing_controller/launch
 roslaunch control_display.launch
 
 Replay: ```roslaunch mc_log_visualization log_visualizer.launch robot:=robot/HRP4Comanoid log:=/media/DATA/yuquan/PushBoxImpact_17_05_16h09.bin```
+
+
+2. control_display_grabbox.launch 
+Displays the grabbox in rvitz. 
+
+
+2. run_ticker.launch 
+
+would run the controller with ROS integration without physices engine. 
