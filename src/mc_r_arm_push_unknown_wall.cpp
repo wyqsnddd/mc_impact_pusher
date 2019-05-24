@@ -6,6 +6,10 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
 
   forceThreshold = config()("contact_detection")("ForceThreshold");
 
+  std::cout << "Kinematics and Dynamics constraints are created." << std::endl;
+  solver().addConstraintSet(kinematicsConstraint);
+  solver().addConstraintSet(dynamicsConstraint);
+
   logger().addLogEntry("CoP_LeftFoot_World", [this]() {
     auto & robot = this->realRobots().robot();
     return robot.copW("LeftFoot");
@@ -68,6 +72,15 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
                     }));
 
   std::string impactBodyString(config()("states")("Contact")("impactBodyName"));
+
+  //auto fd_example = dynamicsConstraint.motionConstr->fd();
+  //std::unique_ptr<rbd::ForwardDynamics> fdtempPtr = std::unique_ptr<rbd::ForwardDynamics>(dynamicsConstraint.motionConstr->fd());
+  //std::shared_ptr<rbd::ForwardDynamics> fdPtr = std::make_shared<rbd::ForwardDynamics>(dynamicsConstraint.motionConstr->fd());
+  //const rbd::ForwardDynamics * fdPtr_temp = dynamicsConstraint.motionConstr->fd();
+
+
+  //std::shared_ptr<rbd::ForwardDynamics> fdPtr = std::make_shared<rbd::ForwardDynamics>(dynamicsConstraint.motionConstr->fd());
+  //miPredictorPtr.reset(new mi_impactPredictor(robots().robot(robots().robotIndex()), 
   miPredictorPtr.reset(new mi_impactPredictor(robot(), 
 			  impactBodyString,
 			  config()("states")("Contact")("useLinearJacobian"), 
@@ -105,83 +118,96 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
   miPredictorPtr->setContact("r_sole");
  
   logger().addLogEntry("ee_Vel_impact_jump", [this]() {
-    Eigen::VectorXd eeVelJump = miPredictorPtr->getEeVelocityJump();
-    return eeVelJump;
+    //Eigen::VectorXd eeVelJump = 
+    return miPredictorPtr->getEeVelocityJump();
   });
   logger().addLogEntry("ee_Vel", [this]() {
-    Eigen::VectorXd eeVel =
-        realRobots().robot().mbc().bodyVelW[realRobots().robot().mb().bodyIndexByName("r_wrist")].vector();
-
-    return eeVel;
+		  return realRobots().robot().mbc().bodyVelW[realRobots().robot().mb().bodyIndexByName("r_wrist")].linear();
   });
 
+  logger().addLogEntry("ee_dq", [this]() {
+
+    return miPredictorPtr->getBranchJointVelJump("r_wrist"); 
+    
+  });
+  logger().addLogEntry("ee_dtau", [this]() {
+    return miPredictorPtr->getBranchTauJump("r_wrist"); 
+  });
+
+
   logger().addLogEntry("l_ankle_Vel_impact_jump", [this]() {
-    Eigen::VectorXd eeVelJump = miPredictorPtr->getEeVelocityJump("l_sole");
-    return eeVelJump;
+    return miPredictorPtr->getEeVelocityJump("l_sole");
   });
 
   logger().addLogEntry("l_ankle_Vel", [this]() {
-    Eigen::VectorXd leeVelJump = realRobots().robot().mbc().bodyVelW[realRobots().robot().mb().bodyIndexByName("l_sole")].vector();
-    
-    return leeVelJump;
+    return realRobots().robot().mbc().bodyVelW[realRobots().robot().mb().bodyIndexByName("l_sole")].linear();
   });
 
+  logger().addLogEntry("l_ankle_dq", [this]() {
+
+    return miPredictorPtr->getBranchJointVelJump("l_sole"); 
+    
+  });
+  logger().addLogEntry("l_ankle_dtau", [this]() {
+    return miPredictorPtr->getBranchTauJump("l_sole"); 
+  });
+
+
+
   logger().addLogEntry("r_ankle_Vel_impact_jump", [this]() {
-    Eigen::VectorXd eeVelJump = miPredictorPtr->getEeVelocityJump("r_sole");
-    return eeVelJump;
+    return miPredictorPtr->getEeVelocityJump("r_sole");
   });
 
   logger().addLogEntry("r_ankle_Vel", [this]() {
-    Eigen::VectorXd reeVelJump = realRobots().robot().mbc().bodyVelW[realRobots().robot().mb().bodyIndexByName("r_sole")].vector();
-    
-    return reeVelJump;
+    return  realRobots().robot().mbc().bodyVelW[realRobots().robot().mb().bodyIndexByName("r_sole")].linear();
   });
 
+  logger().addLogEntry("r_ankle_dq", [this]() {
+
+    return miPredictorPtr->getBranchJointVelJump("r_sole"); 
+    
+  });
+  logger().addLogEntry("r_ankle_dtau", [this]() {
+    return miPredictorPtr->getBranchTauJump("r_sole"); 
+  });
+
+
   logger().addLogEntry("ee_impact_impulse", [this]() {
-    Eigen::VectorXd eeImpulse = miPredictorPtr->getImpulsiveForce();
-    return eeImpulse;
+    return miPredictorPtr->getImpulsiveForce();
   });
 
   logger().addLogEntry("l_ankle_predict_impact_impulse", [this]() {
-    Eigen::VectorXd ankleImpulse = miPredictorPtr->getImpulsiveForce("l_sole");
-    return ankleImpulse;
+    return miPredictorPtr->getImpulsiveForce("l_sole");
   });
 
   logger().addLogEntry("r_ankle_predict_impact_impulse", [this]() {
-    Eigen::VectorXd ankleImpulse = miPredictorPtr->getImpulsiveForce("r_sole");
-    return ankleImpulse;
+    return miPredictorPtr->getImpulsiveForce("r_sole");
   });
   logger().addLogEntry("q_position", [this]() {
-    Eigen::VectorXd q = rbd::dofToVector(robot().mb(), robot().mbc().q);
-    return q;
+    return rbd::dofToVector(robot().mb(), robot().mbc().q);
   });
 
 
   logger().addLogEntry("q_vel", [this]() {
-    Eigen::VectorXd qvel = rbd::dofToVector(robot().mb(), robot().mbc().alpha);
-    return qvel;
+    return rbd::dofToVector(robot().mb(), robot().mbc().alpha);
   });
 
   logger().addLogEntry("q_acc", [this]() {
-    Eigen::VectorXd qacc = rbd::dofToVector(robot().mb(), robot().mbc().alphaD);
-    return qacc;
+    return rbd::dofToVector(robot().mb(), robot().mbc().alphaD);
   });
 
 
   logger().addLogEntry("tau", [this]() {
-    Eigen::VectorXd tau = rbd::dofToVector(robot().mb(), robot().mbc().jointTorque);
-    return tau;
+    return rbd::dofToVector(robot().mb(), robot().mbc().jointTorque);
   });
 
 
   logger().addLogEntry("delta_q_vel", [this]() {
-    Eigen::VectorXd delta_qvel = miPredictorPtr->getJointVelocityJump(); 
-    return delta_qvel;
+    return miPredictorPtr->getJointVelocityJump(); 
   });
 
   logger().addLogEntry("delta_tau", [this]() {
-    Eigen::VectorXd delta_tau = miPredictorPtr->getTauJump();
-    return delta_tau;
+    return miPredictorPtr->getTauJump();
   });
 
   logger().addLogEntry("realRobot_posW", [this]() { return realRobot().posW(); });
@@ -222,9 +248,6 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
                     }));
   // std::cout << "Operational space dynamics Predictor is about to be created." << std::endl;
   // Add constriants:
-  std::cout << "Kinematics and Dynamics constraints are created." << std::endl;
-  solver().addConstraintSet(kinematicsConstraint);
-  solver().addConstraintSet(dynamicsConstraint);
 }
 
 const mc_rbdyn::Robot & Controller::realRobot() const

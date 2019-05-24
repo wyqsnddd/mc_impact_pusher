@@ -163,7 +163,11 @@ bool DynamicContactState::run(mc_control::fsm::Controller & ctlInput)
   // rEfTaskPtr_->eval().norm() <<std::endl;
 
   auto & ctl = static_cast<Controller &>(ctlInput);
-  ctl.miPredictorPtr->run();
+
+  Eigen::Vector3d surfaceNormal;
+  surfaceNormal << -1, 0, 0;
+
+  ctl.miPredictorPtr->run(surfaceNormal);
 
   if(rPosTaskPtr_->eval().norm() <= 0.01)
   {

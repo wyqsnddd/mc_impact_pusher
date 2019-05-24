@@ -50,8 +50,12 @@ bool PrepareHandState::run(mc_control::fsm::Controller & ctlInput)
 {
 
   auto & ctl = static_cast<Controller &>(ctlInput);
-  std::cout << "About to update predictor " << std::endl;
-  ctl.miPredictorPtr->run();
+  //std::cout << "About to update predictor " << std::endl;
+  Eigen::Vector3d surfaceNormal;
+  surfaceNormal << -1, 0, 0;
+
+
+  ctl.miPredictorPtr->run(surfaceNormal);
 
   if(rEfTaskPtr_->eval().norm() <= efThreshold_)
   {
