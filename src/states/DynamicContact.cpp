@@ -42,6 +42,11 @@ void DynamicContactState::start(mc_control::fsm::Controller & ctlInput)
   }
   ctl.miPredictorPtr->resetDataStructure();
 
+  boundTorqueJump_.reset(new mc_impact::BoundJointTorqueJump(*ctl.miPredictorPtr, ctl.timeStep, ctl.timeStep, Eigen::VectorXd::Zero(ctl.robot().mb().nrDof())/* lowerBound */, Eigen::VectorXd::Zero(ctl.robot().mb().nrDof())/* upperBound */));
+  ctl.solver().addConstraint(boundTorqueJump_.get());
+  boundVelocityJump_.reset(new mc_impact::BoundJointVelocityJump(*ctl.miPredictorPtr, ctl.timeStep, Eigen::VectorXd::Zero(ctl.robot().mb().nrDof())/* lowerBound */, Eigen::VectorXd::Zero(ctl.robot().mb().nrDof())/* upperBound */));
+  ctl.solver().addConstraint(boundVelocityJump_.get());
+
   /*
     ctl.miPredictorPtr.reset(new mi_impactPredictor(ctl.robot(), ctl.config()("states")("Contact")("impactBodyName"),
                                                     ctl.config()("states")("Contact")("useLinearJacobian"),
@@ -185,6 +190,8 @@ void DynamicContactState::teardown(mc_control::fsm::Controller & ctl_)
   auto & ctl = static_cast<Controller &>(ctl_);
   ctl.solver().removeTask(rPosTaskPtr_);
   ctl.solver().removeTask(ctl.comTaskPtr);
+  ctl.solver().removeConstraint(boundTorqueJump_.get());
+  ctl.solver().removeConstraint(boundVelocityJump_.get());
 }
 
 EXPORT_SINGLE_STATE("DynamicContact", DynamicContactState)

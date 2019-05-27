@@ -27,6 +27,7 @@ set_target_properties(${LIB_NAME} PROPERTIES COMPILE_FLAGS "-DMC_CONTROL_EXPORTS
 pkg_config_use_dependency(${LIB_NAME} mc_rtc)
 target_link_libraries(${LIB_NAME} mc_impact_predictor)
 target_link_libraries(${LIB_NAME} mc_control_fsm)
+target_link_libraries(${LIB_NAME} mc_impact_constraints)
 install(TARGETS ${LIB_NAME} DESTINATION ${MC_RTC_LIBDIR}/mc_controller)
 
 
