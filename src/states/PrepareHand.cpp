@@ -54,6 +54,9 @@ bool PrepareHandState::run(mc_control::fsm::Controller & ctlInput)
   Eigen::Vector3d surfaceNormal;
   surfaceNormal << -1, 0, 0;
 
+  // Assert: 
+  
+
 
   ctl.miPredictorPtr->run(surfaceNormal);
 

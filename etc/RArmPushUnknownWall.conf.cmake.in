@@ -148,7 +148,8 @@
 	"impactBodyName": "r_wrist",
 	"end-effectors2": ["l_ankle", "r_ankle", "l_wrist", "r_wrist"],
 	"end-effectors1": [ "l_sole", "r_sole", "body", "torso","r_wrist"],
-	"end-effectors": [ "l_sole", "r_sole", "l_wrist","r_wrist"]
+	"end-effectors0": [ "l_sole", "r_sole", "l_wrist","r_wrist"],
+	"end-effectors": [ "l_sole", "r_sole", "r_wrist"]
       },
       "Final": { "base": "Pause", "placeholderParameter": 0.1 }
     },

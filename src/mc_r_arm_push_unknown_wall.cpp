@@ -95,7 +95,6 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
   miPredictorPtr->initializeDataStructure(static_cast<int>(eeNameVector.size()));
   miPredictorPtr->resetDataStructure();
 
-
   for(auto index = eeNameVector.begin(); index != eeNameVector.end(); ++index)
   {
 
@@ -208,6 +207,54 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
 
   logger().addLogEntry("delta_tau", [this]() {
     return miPredictorPtr->getTauJump();
+  });
+
+  logger().addLogEntry("test_delta_tau_norm", [this]() {
+   return miPredictorPtr->getTauJump().norm(); 
+  });
+
+  logger().addLogEntry("test_delta_tau_impact_norm", [this]() {
+   return miPredictorPtr->getBranchTauJump("r_wrist").norm(); 
+  });
+  logger().addLogEntry("test_delta_tau_l_sole_norm", [this]() {
+   return miPredictorPtr->getBranchTauJump("l_sole").norm(); 
+  });
+logger().addLogEntry("test_delta_tau_r_sole_norm", [this]() {
+   return miPredictorPtr->getBranchTauJump("r_sole").norm(); 
+  });
+
+
+  logger().addLogEntry("test_delta_tau_jacobian", [this]() {
+		  Eigen::VectorXd temp = (
+				  rbd::dofToVector(robot().mb(), robot().mbc().alpha) 
+				  + rbd::dofToVector(robot().mb(), robot().mbc().alphaD)*miPredictorPtr->getImpactDuration_()
+				  );
+    return ((1/miPredictorPtr->getImpactDuration_())*miPredictorPtr->getJacobianDeltaTau()*temp  ).norm();
+  });
+
+
+
+
+  logger().addLogEntry("diff_delta_tau", [this]() {
+		  Eigen::VectorXd temp = (
+				  rbd::dofToVector(robot().mb(), robot().mbc().alpha) 
+				  + rbd::dofToVector(robot().mb(), robot().mbc().alphaD)*miPredictorPtr->getImpactDuration_()
+				  );
+    return ((1/miPredictorPtr->getImpactDuration_())*miPredictorPtr->getJacobianDeltaTau()*temp - rbd::dofToVector(robot().mb(), robot().mbc().jointTorque) ).norm();
+  });
+
+logger().addLogEntry("delta_alpha_norm", [this]() {
+   return miPredictorPtr->getJointVelocityJump().norm(); 
+  });
+
+
+logger().addLogEntry("diff_delta_alpha", [this]() {
+		  Eigen::VectorXd temp = (
+				  rbd::dofToVector(robot().mb(), robot().mbc().alpha) 
+				  + rbd::dofToVector(robot().mb(), robot().mbc().alphaD)*miPredictorPtr->getImpactDuration_()
+				  );
+    return  (miPredictorPtr->getJacobianDeltaAlpha()*temp - miPredictorPtr->getJointVelocityJump()).norm();
+
   });
 
   logger().addLogEntry("realRobot_posW", [this]() { return realRobot().posW(); });
