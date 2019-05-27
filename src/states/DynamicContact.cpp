@@ -6,7 +6,7 @@
 
 void DynamicContactState::configure(const mc_rtc::Configuration & config)
 {
-  state_conf_ = config;
+  state_conf_.load(config);
 }
 
 void DynamicContactState::start(mc_control::fsm::Controller & ctlInput)
@@ -42,9 +42,9 @@ void DynamicContactState::start(mc_control::fsm::Controller & ctlInput)
   }
   ctl.miPredictorPtr->resetDataStructure();
 
-  boundTorqueJump_.reset(new mc_impact::BoundJointTorqueJump(*ctl.miPredictorPtr, ctl.timeStep, ctl.timeStep, Eigen::VectorXd::Zero(ctl.robot().mb().nrDof())/* lowerBound */, Eigen::VectorXd::Zero(ctl.robot().mb().nrDof())/* upperBound */));
+  boundTorqueJump_.reset(new mc_impact::BoundJointTorqueJump(*ctl.miPredictorPtr, ctl.timeStep, ctl.timeStep, state_conf_("JumpTorqueMultiplier", 5.0)));
   ctl.solver().addConstraint(boundTorqueJump_.get());
-  boundVelocityJump_.reset(new mc_impact::BoundJointVelocityJump(*ctl.miPredictorPtr, ctl.timeStep, Eigen::VectorXd::Zero(ctl.robot().mb().nrDof())/* lowerBound */, Eigen::VectorXd::Zero(ctl.robot().mb().nrDof())/* upperBound */));
+  boundVelocityJump_.reset(new mc_impact::BoundJointVelocityJump(*ctl.miPredictorPtr, ctl.timeStep));
   ctl.solver().addConstraint(boundVelocityJump_.get());
 
   /*
