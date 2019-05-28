@@ -24,4 +24,6 @@ struct Controller : public mc_control::fsm::Controller
 
 private:
   const mc_rbdyn::Robot & realRobot() const;
+
+  const mc_rbdyn::Contact & getContact(const std::string & s);
 };

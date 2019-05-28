@@ -50,15 +50,15 @@ bool PrepareHandState::run(mc_control::fsm::Controller & ctlInput)
 {
 
   auto & ctl = static_cast<Controller &>(ctlInput);
-  //std::cout << "About to update predictor " << std::endl;
+  // std::cout << "About to update predictor " << std::endl;
   Eigen::Vector3d surfaceNormal;
-  surfaceNormal << -1, 0, 0;
+  surfaceNormal << 1, 0, 0;
 
-  // Assert: 
-  
+  // Assert:
 
-
-  ctl.miPredictorPtr->run(surfaceNormal);
+  sva::PTransformd X_0_ee = ctl.robot().bodyPosW("r_wrist");
+  //ctl.miPredictorPtr->run(surfaceNormal);
+  ctl.miPredictorPtr->run( X_0_ee.rotation()*surfaceNormal + X_0_ee.translation());
 
   if(rEfTaskPtr_->eval().norm() <= efThreshold_)
   {
@@ -74,7 +74,7 @@ void PrepareHandState::teardown(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<Controller &>(ctl_);
   ctl.solver().removeTask(rEfTaskPtr_);
-  //ctl.miPredictorPtr->resetDataStructure();
+  // ctl.miPredictorPtr->resetDataStructure();
 }
 
 EXPORT_SINGLE_STATE("PrepareHand", PrepareHandState)

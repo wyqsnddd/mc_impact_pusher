@@ -73,22 +73,19 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
 
   std::string impactBodyString(config()("states")("Contact")("impactBodyName"));
 
-  //auto fd_example = dynamicsConstraint.motionConstr->fd();
-  //std::unique_ptr<rbd::ForwardDynamics> fdtempPtr = std::unique_ptr<rbd::ForwardDynamics>(dynamicsConstraint.motionConstr->fd());
-  //std::shared_ptr<rbd::ForwardDynamics> fdPtr = std::make_shared<rbd::ForwardDynamics>(dynamicsConstraint.motionConstr->fd());
-  //const rbd::ForwardDynamics * fdPtr_temp = dynamicsConstraint.motionConstr->fd();
+  // auto fd_example = dynamicsConstraint.motionConstr->fd();
+  // std::unique_ptr<rbd::ForwardDynamics> fdtempPtr =
+  // std::unique_ptr<rbd::ForwardDynamics>(dynamicsConstraint.motionConstr->fd()); std::shared_ptr<rbd::ForwardDynamics>
+  // fdPtr = std::make_shared<rbd::ForwardDynamics>(dynamicsConstraint.motionConstr->fd()); const rbd::ForwardDynamics *
+  // fdPtr_temp = dynamicsConstraint.motionConstr->fd();
 
-
-  //std::shared_ptr<rbd::ForwardDynamics> fdPtr = std::make_shared<rbd::ForwardDynamics>(dynamicsConstraint.motionConstr->fd());
-  //miPredictorPtr.reset(new mi_impactPredictor(robots().robot(robots().robotIndex()), 
-  miPredictorPtr.reset(new mi_impactPredictor(robot(), 
-			  impactBodyString,
-			  config()("states")("Contact")("useLinearJacobian"), 
-			  //solver().dt(),
-			  config()("states")("Contact")("delta_dt"),
-			  config()("states")("Contact")("coeRestitution")
-			  )
-		  );
+  // std::shared_ptr<rbd::ForwardDynamics> fdPtr =
+  // std::make_shared<rbd::ForwardDynamics>(dynamicsConstraint.motionConstr->fd()); miPredictorPtr.reset(new
+  // mi_impactPredictor(robots().robot(robots().robotIndex()),
+  miPredictorPtr.reset(new mi_impactPredictor(
+      robot(), impactBodyString, config()("states")("Contact")("useLinearJacobian"),
+      // solver().dt(),
+      config()("states")("Contact")("delta_dt"), config()("states")("Contact")("coeFrictionDeduction"), config()("states")("Contact")("coeRestitution")));
 
   std::vector<std::string> eeNameVector = config()("states")("Contact")("end-effectors");
 
@@ -115,147 +112,229 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
 
   miPredictorPtr->setContact("l_sole");
   miPredictorPtr->setContact("r_sole");
- 
+
   logger().addLogEntry("ee_Vel_impact_jump", [this]() {
-    //Eigen::VectorXd eeVelJump = 
+    // Eigen::VectorXd eeVelJump =
     return miPredictorPtr->getEeVelocityJump();
   });
   logger().addLogEntry("ee_Vel", [this]() {
-		  return realRobots().robot().mbc().bodyVelW[realRobots().robot().mb().bodyIndexByName("r_wrist")].linear();
+    return realRobots().robot().mbc().bodyVelW[realRobots().robot().mb().bodyIndexByName("r_wrist")].linear();
   });
 
   logger().addLogEntry("ee_dq", [this]() {
-
-    return miPredictorPtr->getBranchJointVelJump("r_wrist"); 
-    
+    return miPredictorPtr->getBranchJointVelJump("r_wrist");
   });
-  logger().addLogEntry("ee_dtau", [this]() {
-    return miPredictorPtr->getBranchTauJump("r_wrist"); 
-  });
+  logger().addLogEntry("ee_dtau", [this]() { return miPredictorPtr->getBranchTauJump("r_wrist"); });
 
-
-  logger().addLogEntry("l_ankle_Vel_impact_jump", [this]() {
-    return miPredictorPtr->getEeVelocityJump("l_sole");
-  });
+  logger().addLogEntry("l_ankle_Vel_impact_jump", [this]() { return miPredictorPtr->getEeVelocityJump("l_sole"); });
 
   logger().addLogEntry("l_ankle_Vel", [this]() {
     return realRobots().robot().mbc().bodyVelW[realRobots().robot().mb().bodyIndexByName("l_sole")].linear();
   });
 
   logger().addLogEntry("l_ankle_dq", [this]() {
-
-    return miPredictorPtr->getBranchJointVelJump("l_sole"); 
-    
+    return miPredictorPtr->getBranchJointVelJump("l_sole");
   });
-  logger().addLogEntry("l_ankle_dtau", [this]() {
-    return miPredictorPtr->getBranchTauJump("l_sole"); 
-  });
+  logger().addLogEntry("l_ankle_dtau", [this]() { return miPredictorPtr->getBranchTauJump("l_sole"); });
 
-
-
-  logger().addLogEntry("r_ankle_Vel_impact_jump", [this]() {
-    return miPredictorPtr->getEeVelocityJump("r_sole");
-  });
+  logger().addLogEntry("r_ankle_Vel_impact_jump", [this]() { return miPredictorPtr->getEeVelocityJump("r_sole"); });
 
   logger().addLogEntry("r_ankle_Vel", [this]() {
-    return  realRobots().robot().mbc().bodyVelW[realRobots().robot().mb().bodyIndexByName("r_sole")].linear();
+    return realRobots().robot().mbc().bodyVelW[realRobots().robot().mb().bodyIndexByName("r_sole")].linear();
   });
 
   logger().addLogEntry("r_ankle_dq", [this]() {
-
-    return miPredictorPtr->getBranchJointVelJump("r_sole"); 
-    
+    return miPredictorPtr->getBranchJointVelJump("r_sole");
   });
-  logger().addLogEntry("r_ankle_dtau", [this]() {
-    return miPredictorPtr->getBranchTauJump("r_sole"); 
-  });
+  logger().addLogEntry("r_ankle_dtau", [this]() { return miPredictorPtr->getBranchTauJump("r_sole"); });
 
+  logger().addLogEntry("ee_impact_impulse", [this]() { return miPredictorPtr->getImpulsiveForce(); });
+  logger().addLogEntry("ee_impact_impulse_COM", [this]() {
+    sva::PTransformd X_0_CoM = sva::PTransformd(robot().com());
+    sva::PTransformd X_0_ee = robot().bodyPosW("r_wrist");
+    sva::PTransformd X_ee_CoM = X_0_CoM * X_0_ee.inv();
 
-  logger().addLogEntry("ee_impact_impulse", [this]() {
-    return miPredictorPtr->getImpulsiveForce();
-  });
-
-  logger().addLogEntry("l_ankle_predict_impact_impulse", [this]() {
-    return miPredictorPtr->getImpulsiveForce("l_sole");
+    sva::ForceVecd f_ee =
+        X_ee_CoM.dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), miPredictorPtr->getImpulsiveForce()));
+    return f_ee;
   });
 
-  logger().addLogEntry("r_ankle_predict_impact_impulse", [this]() {
-    return miPredictorPtr->getImpulsiveForce("r_sole");
-  });
-  logger().addLogEntry("q_position", [this]() {
-    return rbd::dofToVector(robot().mb(), robot().mbc().q);
-  });
+  logger().addLogEntry("l_ankle_predict_impact_impulse",
+                       [this]() { return miPredictorPtr->getImpulsiveForce("l_sole"); });
 
+  logger().addLogEntry("r_ankle_predict_impact_impulse",
+                       [this]() { return miPredictorPtr->getImpulsiveForce("r_sole"); });
+  logger().addLogEntry("q_position", [this]() { return rbd::dofToVector(robot().mb(), robot().mbc().q); });
 
-  logger().addLogEntry("q_vel", [this]() {
-    return rbd::dofToVector(robot().mb(), robot().mbc().alpha);
-  });
+  logger().addLogEntry("q_vel", [this]() { return rbd::dofToVector(robot().mb(), robot().mbc().alpha); });
 
-  logger().addLogEntry("q_acc", [this]() {
-    return rbd::dofToVector(robot().mb(), robot().mbc().alphaD);
-  });
+  logger().addLogEntry("q_acc", [this]() { return rbd::dofToVector(robot().mb(), robot().mbc().alphaD); });
 
+  logger().addLogEntry("tau", [this]() { return rbd::dofToVector(robot().mb(), robot().mbc().jointTorque); });
 
-  logger().addLogEntry("tau", [this]() {
-    return rbd::dofToVector(robot().mb(), robot().mbc().jointTorque);
-  });
+  logger().addLogEntry("delta_q_vel", [this]() { return miPredictorPtr->getJointVelocityJump(); });
 
+  logger().addLogEntry("delta_tau", [this]() { return miPredictorPtr->getTauJump(); });
 
-  logger().addLogEntry("delta_q_vel", [this]() {
-    return miPredictorPtr->getJointVelocityJump(); 
-  });
+  logger().addLogEntry("test_delta_tau_norm", [this]() { return miPredictorPtr->getTauJump().norm(); });
 
-  logger().addLogEntry("delta_tau", [this]() {
-    return miPredictorPtr->getTauJump();
-  });
-
-  logger().addLogEntry("test_delta_tau_norm", [this]() {
-   return miPredictorPtr->getTauJump().norm(); 
-  });
-
-  logger().addLogEntry("test_delta_tau_impact_norm", [this]() {
-   return miPredictorPtr->getBranchTauJump("r_wrist").norm(); 
-  });
-  logger().addLogEntry("test_delta_tau_l_sole_norm", [this]() {
-   return miPredictorPtr->getBranchTauJump("l_sole").norm(); 
-  });
-logger().addLogEntry("test_delta_tau_r_sole_norm", [this]() {
-   return miPredictorPtr->getBranchTauJump("r_sole").norm(); 
-  });
-
+  logger().addLogEntry("test_delta_tau_impact_norm",
+                       [this]() { return miPredictorPtr->getBranchTauJump("r_wrist").norm(); });
+  logger().addLogEntry("test_delta_tau_l_sole_norm",
+                       [this]() { return miPredictorPtr->getBranchTauJump("l_sole").norm(); });
+  logger().addLogEntry("test_delta_tau_r_sole_norm",
+                       [this]() { return miPredictorPtr->getBranchTauJump("r_sole").norm(); });
 
   logger().addLogEntry("test_delta_tau_jacobian", [this]() {
-		  Eigen::VectorXd temp = (
-				  rbd::dofToVector(robot().mb(), robot().mbc().alpha) 
-				  + rbd::dofToVector(robot().mb(), robot().mbc().alphaD)*miPredictorPtr->getImpactDuration_()
-				  );
-    return ((1/miPredictorPtr->getImpactDuration_())*miPredictorPtr->getJacobianDeltaTau()*temp  ).norm();
+    Eigen::VectorXd temp =
+        (rbd::dofToVector(robot().mb(), robot().mbc().alpha)
+         + rbd::dofToVector(robot().mb(), robot().mbc().alphaD) * miPredictorPtr->getImpactDuration_());
+    return ((1 / miPredictorPtr->getImpactDuration_()) * miPredictorPtr->getJacobianDeltaTau() * temp).norm();
   });
-
-
-
 
   logger().addLogEntry("diff_delta_tau", [this]() {
-		  Eigen::VectorXd temp = (
-				  rbd::dofToVector(robot().mb(), robot().mbc().alpha) 
-				  + rbd::dofToVector(robot().mb(), robot().mbc().alphaD)*miPredictorPtr->getImpactDuration_()
-				  );
-    return ((1/miPredictorPtr->getImpactDuration_())*miPredictorPtr->getJacobianDeltaTau()*temp - rbd::dofToVector(robot().mb(), robot().mbc().jointTorque) ).norm();
+    Eigen::VectorXd temp =
+        (rbd::dofToVector(robot().mb(), robot().mbc().alpha)
+         + rbd::dofToVector(robot().mb(), robot().mbc().alphaD) * miPredictorPtr->getImpactDuration_());
+    return ((1 / miPredictorPtr->getImpactDuration_()) * miPredictorPtr->getJacobianDeltaTau() * temp
+            - rbd::dofToVector(robot().mb(), robot().mbc().jointTorque))
+        .norm();
   });
 
-logger().addLogEntry("delta_alpha_norm", [this]() {
-   return miPredictorPtr->getJointVelocityJump().norm(); 
+  logger().addLogEntry("delta_alpha_norm", [this]() { return miPredictorPtr->getJointVelocityJump().norm(); });
+
+  logger().addLogEntry("diff_delta_alpha", [this]() {
+    Eigen::VectorXd temp =
+        (rbd::dofToVector(robot().mb(), robot().mbc().alpha)
+         + rbd::dofToVector(robot().mb(), robot().mbc().alphaD) * miPredictorPtr->getImpactDuration_());
+    return (miPredictorPtr->getJacobianDeltaAlpha() * temp - miPredictorPtr->getJointVelocityJump()).norm();
   });
 
+  //----------------------------- check the joint velocity jump
 
-logger().addLogEntry("diff_delta_alpha", [this]() {
-		  Eigen::VectorXd temp = (
-				  rbd::dofToVector(robot().mb(), robot().mbc().alpha) 
-				  + rbd::dofToVector(robot().mb(), robot().mbc().alphaD)*miPredictorPtr->getImpactDuration_()
-				  );
-    return  (miPredictorPtr->getJacobianDeltaAlpha()*temp - miPredictorPtr->getJointVelocityJump()).norm();
-
+  logger().addLogEntry("test_delta_q_vel_upper", [this]() {
+    Eigen::VectorXd upper =
+        rbd::dofToVector(miPredictorPtr->getRobot().mb(), miPredictorPtr->getRobot().vu())
+        - miPredictorPtr->getJacobianDeltaAlpha() * rbd::dofToVector(robot().mb(), robot().mbc().alpha)
+        - rbd::dofToVector(robot().mb(), robot().mbc().alpha);
+    return upper;
   });
+  logger().addLogEntry("test_delta_q_vel_lower", [this]() {
+    Eigen::VectorXd lower =
+        rbd::dofToVector(miPredictorPtr->getRobot().mb(), miPredictorPtr->getRobot().vl())
+        - miPredictorPtr->getJacobianDeltaAlpha() * rbd::dofToVector(robot().mb(), robot().mbc().alpha)
+        - rbd::dofToVector(robot().mb(), robot().mbc().alpha);
+    return lower;
+  });
+  logger().addLogEntry("test_delta_q_vel_middle", [this]() {
+    Eigen::VectorXd middle = miPredictorPtr->getJacobianDeltaAlpha()
+                             * rbd::dofToVector(robot().mb(), robot().mbc().alphaD)
+                             * miPredictorPtr->getImpactDuration_();
+    return middle;
+  });
+
+  //----------------------------- check the impulsive joint torque
+
+  logger().addLogEntry("test_delta_tau_upper", [this]() {
+    Eigen::VectorXd upper = 5.0 * rbd::dofToVector(miPredictorPtr->getRobot().mb(), miPredictorPtr->getRobot().tu())
+                            - (1 / miPredictorPtr->getImpactDuration_()) * miPredictorPtr->getJacobianDeltaTau()
+                                  * rbd::dofToVector(robot().mb(), robot().mbc().alpha);
+    return upper;
+  });
+
+  logger().addLogEntry("test_delta_tau_lower", [this]() {
+    Eigen::VectorXd lower = 5.0 * rbd::dofToVector(miPredictorPtr->getRobot().mb(), miPredictorPtr->getRobot().tl())
+                            - (1 / miPredictorPtr->getImpactDuration_()) * miPredictorPtr->getJacobianDeltaTau()
+                                  * rbd::dofToVector(robot().mb(), robot().mbc().alpha);
+    return lower;
+  });
+
+  logger().addLogEntry("test_delta_tau_middle", [this]() {
+    Eigen::VectorXd middle =
+        miPredictorPtr->getJacobianDeltaTau() * rbd::dofToVector(robot().mb(), robot().mbc().alphaD);
+    return middle;
+  });
+  //----------------------------- check the perturbed ZMP
+
+  /*
+  Eigen::Vector3d temp = X_lSole_CoM.forceDualMul(
+           sva::ForceVecd(Eigen::Vector3d::Zero(),
+             miPredictorPtr->getImpulsiveForce("l_sole"))
+           );
+ */
+  logger().addLogEntry("l_ankle_predict_impact_impulse_COM", [this]() {
+    sva::PTransformd X_b_CoM = sva::PTransformd(robot().com());
+    // sva::PTransformd X_lSole_b = robot().bodyTransform("l_sole");
+    sva::PTransformd X_b_lSole = robot().surface("LeftFoot").X_0_s(robot());
+    sva::PTransformd X_lSole_CoM = X_b_CoM * X_b_lSole.inv();
+
+    sva::ForceVecd temp =
+        X_lSole_CoM.dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), miPredictorPtr->getImpulsiveForce("l_sole")));
+    return temp;
+  });
+
+  logger().addLogEntry("r_ankle_predict_impact_impulse_COM", [this]() {
+    sva::PTransformd X_b_CoM = sva::PTransformd(robot().com());
+    // sva::PTransformd X_rSole_b = robot().bodyTransform("r_sole");
+    sva::PTransformd X_b_rSole = robot().surface("RightFoot").X_0_s(robot());
+    sva::PTransformd X_rSole_CoM = X_b_CoM * X_b_rSole.inv();
+
+    sva::ForceVecd temp =
+        X_rSole_CoM.dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), miPredictorPtr->getImpulsiveForce("r_sole")));
+    return temp;
+  });
+/*
+  logger().addLogEntry("ZMP_pertubation", [this]() {
+    sva::PTransformd X_0_CoM = sva::PTransformd(robot().com());
+    sva::PTransformd X_0_rSole = robot().surface("RightFoot").X_0_s(robot());
+    sva::PTransformd X_rSole_CoM = X_0_CoM * X_0_rSole.inv();
+
+    sva::ForceVecd f_r_sole =
+        X_rSole_CoM.dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), miPredictorPtr->getImpulsiveForce("r_sole")));
+
+    // sva::PTransformd X_lSole_b = robot().bodyTransform("l_sole");
+    sva::PTransformd X_0_lSole = robot().surface("LeftFoot").X_0_s(robot());
+    sva::PTransformd X_lSole_CoM = X_0_CoM * X_0_lSole.inv();
+
+    sva::ForceVecd f_l_sole =
+        X_lSole_CoM.dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), miPredictorPtr->getImpulsiveForce("l_sole")));
+
+    // sva::PTransformd X_lSole_b = robot().bodyTransform("l_sole");
+    sva::PTransformd X_0_ee = robot().bodyPosW("r_wrist");
+    sva::PTransformd X_ee_CoM = X_0_CoM * X_0_ee.inv();
+
+    sva::ForceVecd f_ee =
+        X_ee_CoM.dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), miPredictorPtr->getImpulsiveForce("l_sole")));
+
+    
+    
+    sva::ForceVecd F_r_qp = solver().desiredContactForce(
+		    getContact("r_sole")
+		    );
+    sva::ForceVecd F_l_qp = solver().desiredContactForce(getContact("l_sole"));
+
+    double denominator =
+        (f_r_sole.force().z() + f_l_sole.force().z() + f_ee.force().z());
+    double pz_x = -(f_r_sole.moment().y() + f_l_sole.moment().y() + f_ee.moment().y()); 
+    return F_l_qp;
+  });
+*/
+  //----------------------------- F_QP
+  logger().addLogEntry("r_ankle_wrench_QP", [this]() { 
+		  sva::ForceVecd F =  solver().desiredContactForce(getContact("LeftFoot"));
+		  
+		  return F; 
+		  });
+
+  logger().addLogEntry("l_ankle_wrench_QP", [this]() { 
+		  sva::ForceVecd F = solver().desiredContactForce(getContact("RightFoot"));
+		  return F; 
+		  
+		  });
+
+
+  //-----------------------------
+  logger().addLogEntry("robot_com", [this]() { return robot().com(); });
 
   logger().addLogEntry("realRobot_posW", [this]() { return realRobot().posW(); });
 
@@ -327,6 +406,18 @@ void Controller::reset(const mc_control::ControllerResetData & data)
 
   /** Initialize FSM stuff */
   mc_control::fsm::Controller::reset(data);
+}
+
+  const mc_rbdyn::Contact & Controller::getContact(const std::string & s)
+{
+  for(const auto & c : solver().contacts())
+  {
+    if((c.r1Index() == 0 && c.r1Surface()->name() == s) || (c.r2Index() == 0 && c.r2Surface()->name() == s))
+    {
+      return c;
+    }
+  }
+  LOG_ERROR_AND_THROW(std::runtime_error, "Failed to find contact id for " << s)
 }
 
 CONTROLLER_CONSTRUCTOR("RArmPushUnknownWall", Controller)
