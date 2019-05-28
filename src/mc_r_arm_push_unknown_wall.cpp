@@ -256,15 +256,8 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
   });
   //----------------------------- check the perturbed ZMP
 
-  /*
-  Eigen::Vector3d temp = X_lSole_CoM.forceDualMul(
-           sva::ForceVecd(Eigen::Vector3d::Zero(),
-             miPredictorPtr->getImpulsiveForce("l_sole"))
-           );
- */
   logger().addLogEntry("l_ankle_predict_impact_impulse_COM", [this]() {
     sva::PTransformd X_b_CoM = sva::PTransformd(robot().com());
-    // sva::PTransformd X_lSole_b = robot().bodyTransform("l_sole");
     sva::PTransformd X_b_lSole = robot().surface("LeftFoot").X_0_s(robot());
     sva::PTransformd X_lSole_CoM = X_b_CoM * X_b_lSole.inv();
 
@@ -275,7 +268,6 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
 
   logger().addLogEntry("r_ankle_predict_impact_impulse_COM", [this]() {
     sva::PTransformd X_b_CoM = sva::PTransformd(robot().com());
-    // sva::PTransformd X_rSole_b = robot().bodyTransform("r_sole");
     sva::PTransformd X_b_rSole = robot().surface("RightFoot").X_0_s(robot());
     sva::PTransformd X_rSole_CoM = X_b_CoM * X_b_rSole.inv();
 
@@ -283,7 +275,7 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
         X_rSole_CoM.dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), miPredictorPtr->getImpulsiveForce("r_sole")));
     return temp;
   });
-/*
+
   logger().addLogEntry("ZMP_pertubation", [this]() {
     sva::PTransformd X_0_CoM = sva::PTransformd(robot().com());
     sva::PTransformd X_0_rSole = robot().surface("RightFoot").X_0_s(robot());
@@ -304,31 +296,38 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
     sva::PTransformd X_ee_CoM = X_0_CoM * X_0_ee.inv();
 
     sva::ForceVecd f_ee =
-        X_ee_CoM.dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), miPredictorPtr->getImpulsiveForce("l_sole")));
+        X_ee_CoM.dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), miPredictorPtr->getImpulsiveForce()));
 
     
     
-    sva::ForceVecd F_r_qp = solver().desiredContactForce(
-		    getContact("r_sole")
-		    );
-    sva::ForceVecd F_l_qp = solver().desiredContactForce(getContact("l_sole"));
+    sva::ForceVecd F_r_qp = solver().desiredContactForce(getContact("RightFoot") );
+
+    sva::ForceVecd F_l_qp = solver().desiredContactForce(getContact("LeftFoot") );
 
     double denominator =
-        (f_r_sole.force().z() + f_l_sole.force().z() + f_ee.force().z());
-    double pz_x = -(f_r_sole.moment().y() + f_l_sole.moment().y() + f_ee.moment().y()); 
-    return F_l_qp;
+        (F_l_qp.force().z() + F_r_qp.force().z() + f_r_sole.force().z() + f_l_sole.force().z() + f_ee.force().z());
+
+    Eigen::Vector3d tempZMP;
+    tempZMP.x()  = -(f_r_sole.moment().y() + f_l_sole.moment().y() + f_ee.moment().y())/denominator; 
+    tempZMP.y() = (f_r_sole.moment().x() + f_l_sole.moment().x() + f_ee.moment().x())/denominator; 
+    tempZMP.z() = 0;
+    return tempZMP;
   });
-*/
+
   //----------------------------- F_QP
   logger().addLogEntry("r_ankle_wrench_QP", [this]() { 
-		  sva::ForceVecd F =  solver().desiredContactForce(getContact("LeftFoot"));
+		 // sva::ForceVecd F =  
 		  
-		  return F; 
+		  return solver().desiredContactForce(getContact("LeftFoot"));
+		  
+		  //return F; 
 		  });
 
   logger().addLogEntry("l_ankle_wrench_QP", [this]() { 
-		  sva::ForceVecd F = solver().desiredContactForce(getContact("RightFoot"));
-		  return F; 
+		  //sva::ForceVecd F = 
+		  
+		  return solver().desiredContactForce(getContact("RightFoot"));
+		  //return F; 
 		  
 		  });
 
