@@ -278,34 +278,45 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
 
   logger().addLogEntry("ZMP_pertubation", [this]() {
     sva::PTransformd X_0_CoM = sva::PTransformd(robot().com());
-    sva::PTransformd X_0_rSole = robot().surface("RightFoot").X_0_s(robot());
+   // sva::PTransformd X_0_rSole = robot().surface("RightFoot").X_0_s(robot());
+    sva::PTransformd X_0_rSole = robot().bodyPosW("r_sole");
     sva::PTransformd X_rSole_CoM = X_0_CoM * X_0_rSole.inv();
-
+/*
     sva::ForceVecd f_r_sole =
         X_rSole_CoM.dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), miPredictorPtr->getImpulsiveForce("r_sole")));
-
+*/
     // sva::PTransformd X_lSole_b = robot().bodyTransform("l_sole");
-    sva::PTransformd X_0_lSole = robot().surface("LeftFoot").X_0_s(robot());
+    //sva::PTransformd X_0_lSole = robot().surface("LeftFoot").X_0_s(robot());
+    sva::PTransformd X_0_lSole = robot().bodyPosW("l_sole");
     sva::PTransformd X_lSole_CoM = X_0_CoM * X_0_lSole.inv();
-
+/*
     sva::ForceVecd f_l_sole =
         X_lSole_CoM.dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), miPredictorPtr->getImpulsiveForce("l_sole")));
-
+*/
+    sva::ForceVecd f_l_sole = miPredictorPtr->getImpulsiveForceCOM("l_sole");
+    sva::ForceVecd f_r_sole = miPredictorPtr->getImpulsiveForceCOM("r_sole");
     // sva::PTransformd X_lSole_b = robot().bodyTransform("l_sole");
-    sva::PTransformd X_0_ee = robot().bodyPosW("r_wrist");
-    sva::PTransformd X_ee_CoM = X_0_CoM * X_0_ee.inv();
-
+    //sva::PTransformd X_0_ee = robot().bodyPosW("r_wrist");
+    //sva::PTransformd X_ee_CoM = X_0_CoM * X_0_ee.inv();
+/*
     sva::ForceVecd f_ee =
         X_ee_CoM.dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), miPredictorPtr->getImpulsiveForce()));
-
-    
+*/
+    sva::ForceVecd f_ee = miPredictorPtr->getImpulsiveForceCOM();
     
     sva::ForceVecd F_r_qp = solver().desiredContactForce(getContact("RightFoot") );
 
     sva::ForceVecd F_l_qp = solver().desiredContactForce(getContact("LeftFoot") );
-
+   /* 
     double denominator =
         (F_l_qp.force().z() + F_r_qp.force().z() + f_r_sole.force().z() + f_l_sole.force().z() + f_ee.force().z());
+*/	
+    
+    double denominator =
+        ( robot().forceSensor("RightFootForceSensor").force().z() 
+	  +robot().forceSensor("LeftFootForceSensor").force().z() 
+	  + f_r_sole.force().z() + f_l_sole.force().z() + f_ee.force().z());
+	  
 
     Eigen::Vector3d tempZMP;
     tempZMP.x()  = -(f_r_sole.moment().y() + f_l_sole.moment().y() + f_ee.moment().y())/denominator; 
@@ -383,7 +394,7 @@ const mc_rbdyn::Robot & Controller::realRobot() const
 bool Controller::rArmInContact()
 {
 
-  if(robot().forceSensor("RightHandForceSensor").force().x() > forceThreshold)
+  if(robot().forceSensor("RightHandForceSensor").force().z() > forceThreshold)
   {
     return true;
   }
