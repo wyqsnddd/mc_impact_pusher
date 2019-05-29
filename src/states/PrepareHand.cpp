@@ -57,8 +57,8 @@ bool PrepareHandState::run(mc_control::fsm::Controller & ctlInput)
   // Assert:
 
   sva::PTransformd X_0_ee = ctl.robot().bodyPosW("r_wrist");
-  //ctl.miPredictorPtr->run(surfaceNormal);
-  ctl.miPredictorPtr->run( X_0_ee.rotation()*surfaceNormal + X_0_ee.translation());
+  // ctl.miPredictorPtr->run(surfaceNormal);
+  ctl.miPredictorPtr->run(X_0_ee.rotation() * surfaceNormal + X_0_ee.translation());
 
   if(rEfTaskPtr_->eval().norm() <= efThreshold_)
   {

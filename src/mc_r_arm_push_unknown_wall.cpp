@@ -84,8 +84,10 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
   // mi_impactPredictor(robots().robot(robots().robotIndex()),
   miPredictorPtr.reset(new mi_impactPredictor(
       robot(), impactBodyString, config()("states")("Contact")("useLinearJacobian"),
+      timeStep, // This is the controller time step.
       // solver().dt(),
-      config()("states")("Contact")("delta_dt"), config()("states")("Contact")("coeFrictionDeduction"), config()("states")("Contact")("coeRestitution")));
+      // config()("states")("Contact")("delta_dt"),
+      config()("states")("Contact")("coeFrictionDeduction"), config()("states")("Contact")("coeRestitution")));
 
   std::vector<std::string> eeNameVector = config()("states")("Contact")("end-effectors");
 
@@ -121,9 +123,7 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
     return realRobots().robot().mbc().bodyVelW[realRobots().robot().mb().bodyIndexByName("r_wrist")].linear();
   });
 
-  logger().addLogEntry("ee_dq", [this]() {
-    return miPredictorPtr->getBranchJointVelJump("r_wrist");
-  });
+  logger().addLogEntry("ee_dq", [this]() { return miPredictorPtr->getBranchJointVelJump("r_wrist"); });
   logger().addLogEntry("ee_dtau", [this]() { return miPredictorPtr->getBranchTauJump("r_wrist"); });
 
   logger().addLogEntry("l_ankle_Vel_impact_jump", [this]() { return miPredictorPtr->getEeVelocityJump("l_sole"); });
@@ -132,9 +132,7 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
     return realRobots().robot().mbc().bodyVelW[realRobots().robot().mb().bodyIndexByName("l_sole")].linear();
   });
 
-  logger().addLogEntry("l_ankle_dq", [this]() {
-    return miPredictorPtr->getBranchJointVelJump("l_sole");
-  });
+  logger().addLogEntry("l_ankle_dq", [this]() { return miPredictorPtr->getBranchJointVelJump("l_sole"); });
   logger().addLogEntry("l_ankle_dtau", [this]() { return miPredictorPtr->getBranchTauJump("l_sole"); });
 
   logger().addLogEntry("r_ankle_Vel_impact_jump", [this]() { return miPredictorPtr->getEeVelocityJump("r_sole"); });
@@ -143,9 +141,7 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
     return realRobots().robot().mbc().bodyVelW[realRobots().robot().mb().bodyIndexByName("r_sole")].linear();
   });
 
-  logger().addLogEntry("r_ankle_dq", [this]() {
-    return miPredictorPtr->getBranchJointVelJump("r_sole");
-  });
+  logger().addLogEntry("r_ankle_dq", [this]() { return miPredictorPtr->getBranchJointVelJump("r_sole"); });
   logger().addLogEntry("r_ankle_dtau", [this]() { return miPredictorPtr->getBranchTauJump("r_sole"); });
 
   logger().addLogEntry("ee_impact_impulse", [this]() { return miPredictorPtr->getImpulsiveForce(); });
@@ -278,70 +274,66 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
 
   logger().addLogEntry("ZMP_pertubation", [this]() {
     sva::PTransformd X_0_CoM = sva::PTransformd(robot().com());
-   // sva::PTransformd X_0_rSole = robot().surface("RightFoot").X_0_s(robot());
+    // sva::PTransformd X_0_rSole = robot().surface("RightFoot").X_0_s(robot());
     sva::PTransformd X_0_rSole = robot().bodyPosW("r_sole");
     sva::PTransformd X_rSole_CoM = X_0_CoM * X_0_rSole.inv();
-/*
-    sva::ForceVecd f_r_sole =
-        X_rSole_CoM.dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), miPredictorPtr->getImpulsiveForce("r_sole")));
-*/
+    /*
+        sva::ForceVecd f_r_sole =
+            X_rSole_CoM.dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), miPredictorPtr->getImpulsiveForce("r_sole")));
+    */
     // sva::PTransformd X_lSole_b = robot().bodyTransform("l_sole");
-    //sva::PTransformd X_0_lSole = robot().surface("LeftFoot").X_0_s(robot());
+    // sva::PTransformd X_0_lSole = robot().surface("LeftFoot").X_0_s(robot());
     sva::PTransformd X_0_lSole = robot().bodyPosW("l_sole");
     sva::PTransformd X_lSole_CoM = X_0_CoM * X_0_lSole.inv();
-/*
-    sva::ForceVecd f_l_sole =
-        X_lSole_CoM.dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), miPredictorPtr->getImpulsiveForce("l_sole")));
-*/
+    /*
+        sva::ForceVecd f_l_sole =
+            X_lSole_CoM.dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), miPredictorPtr->getImpulsiveForce("l_sole")));
+    */
     sva::ForceVecd f_l_sole = miPredictorPtr->getImpulsiveForceCOM("l_sole");
     sva::ForceVecd f_r_sole = miPredictorPtr->getImpulsiveForceCOM("r_sole");
     // sva::PTransformd X_lSole_b = robot().bodyTransform("l_sole");
-    //sva::PTransformd X_0_ee = robot().bodyPosW("r_wrist");
-    //sva::PTransformd X_ee_CoM = X_0_CoM * X_0_ee.inv();
-/*
-    sva::ForceVecd f_ee =
-        X_ee_CoM.dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), miPredictorPtr->getImpulsiveForce()));
-*/
+    // sva::PTransformd X_0_ee = robot().bodyPosW("r_wrist");
+    // sva::PTransformd X_ee_CoM = X_0_CoM * X_0_ee.inv();
+    /*
+        sva::ForceVecd f_ee =
+            X_ee_CoM.dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), miPredictorPtr->getImpulsiveForce()));
+    */
     sva::ForceVecd f_ee = miPredictorPtr->getImpulsiveForceCOM();
-    
-    sva::ForceVecd F_r_qp = solver().desiredContactForce(getContact("RightFoot") );
 
-    sva::ForceVecd F_l_qp = solver().desiredContactForce(getContact("LeftFoot") );
-   /* 
-    double denominator =
-        (F_l_qp.force().z() + F_r_qp.force().z() + f_r_sole.force().z() + f_l_sole.force().z() + f_ee.force().z());
-*/	
-    
-    double denominator =
-        ( robot().forceSensor("RightFootForceSensor").force().z() 
-	  +robot().forceSensor("LeftFootForceSensor").force().z() 
-	  + f_r_sole.force().z() + f_l_sole.force().z() + f_ee.force().z());
-	  
+    sva::ForceVecd F_r_qp = solver().desiredContactForce(getContact("RightFoot"));
+
+    sva::ForceVecd F_l_qp = solver().desiredContactForce(getContact("LeftFoot"));
+    /*
+     double denominator =
+         (F_l_qp.force().z() + F_r_qp.force().z() + f_r_sole.force().z() + f_l_sole.force().z() + f_ee.force().z());
+ */
+
+    double denominator = (robot().forceSensor("RightFootForceSensor").force().z()
+                          + robot().forceSensor("LeftFootForceSensor").force().z() + f_r_sole.force().z()
+                          + f_l_sole.force().z() + f_ee.force().z());
 
     Eigen::Vector3d tempZMP;
-    tempZMP.x()  = -(f_r_sole.moment().y() + f_l_sole.moment().y() + f_ee.moment().y())/denominator; 
-    tempZMP.y() = (f_r_sole.moment().x() + f_l_sole.moment().x() + f_ee.moment().x())/denominator; 
+    tempZMP.x() = -(f_r_sole.moment().y() + f_l_sole.moment().y() + f_ee.moment().y()) / denominator;
+    tempZMP.y() = (f_r_sole.moment().x() + f_l_sole.moment().x() + f_ee.moment().x()) / denominator;
     tempZMP.z() = 0;
     return tempZMP;
   });
 
   //----------------------------- F_QP
-  logger().addLogEntry("r_ankle_wrench_QP", [this]() { 
-		 // sva::ForceVecd F =  
-		  
-		  return solver().desiredContactForce(getContact("LeftFoot"));
-		  
-		  //return F; 
-		  });
+  logger().addLogEntry("r_ankle_wrench_QP", [this]() {
+    // sva::ForceVecd F =
 
-  logger().addLogEntry("l_ankle_wrench_QP", [this]() { 
-		  //sva::ForceVecd F = 
-		  
-		  return solver().desiredContactForce(getContact("RightFoot"));
-		  //return F; 
-		  
-		  });
+    return solver().desiredContactForce(getContact("LeftFoot"));
 
+    // return F;
+  });
+
+  logger().addLogEntry("l_ankle_wrench_QP", [this]() {
+    // sva::ForceVecd F =
+
+    return solver().desiredContactForce(getContact("RightFoot"));
+    // return F;
+  });
 
   //-----------------------------
   logger().addLogEntry("robot_com", [this]() { return robot().com(); });
@@ -384,6 +376,51 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
                     }));
   // std::cout << "Operational space dynamics Predictor is about to be created." << std::endl;
   // Add constriants:
+
+  // ---------------------------- constructor: add modified constraints
+  std::cout << "About to create new constriants" << std::endl;
+
+  // state_conf_.load(config);
+  boundTorqueJump_.reset(new mc_impact::BoundJointTorqueJump(*miPredictorPtr, timeStep, timeStep, 3.5));
+  solver().addConstraint(boundTorqueJump_.get());
+
+  // boundVelocityJump_.reset(new mc_impact::BoundJointVelocityJump(*miPredictorPtr, timeStep));
+  std::cout << "bound velocity jump constraint is created" << std::endl;
+  // solver().addConstraint(boundVelocityJump_.get());
+  std::cout << "bound velocity jump constraint is added" << std::endl;
+  // ------------------------------------ Positive contact force
+  
+  positiveContactForceLeftFoot_.reset(
+      new mc_impact::PositiveContactForceWithImpulse(solver(), getContact("LeftFoot"), *miPredictorPtr));
+
+  positiveContactForceRightFoot_.reset(
+      new mc_impact::PositiveContactForceWithImpulse(solver(), getContact("RightFoot"), *miPredictorPtr));
+
+  std::cout << "Positive contact force constraint is created" << std::endl;
+
+  solver().addConstraint(positiveContactForceLeftFoot_.get());
+  solver().addConstraint(positiveContactForceRightFoot_.get());
+  
+  std::cout << "Positive contact force constraint is added" << std::endl;
+
+  // ------------------------------------ Zero slippage
+  /*
+  COPImpulseLeftFoot_.reset(
+		 new mc_impact::COPInsideContactAreaWithImpulse(solver(), getContact("LeftFoot"), *miPredictorPtr) 
+		  ); 
+
+  COPImpulseRightFoot_.reset(
+		 new mc_impact::COPInsideContactAreaWithImpulse(solver(), getContact("RightFoot"), *miPredictorPtr) 
+		  ); 
+
+
+  solver().addConstraint(COPImpulseLeftFoot_.get());
+  solver().addConstraint(COPImpulseRightFoot_.get());
+  std::cout << "Zero slippage constraint is added." <<std::endl;
+*/
+
+  // Once for all the constriants
+  solver().updateConstrSize();
 }
 
 const mc_rbdyn::Robot & Controller::realRobot() const
@@ -418,7 +455,7 @@ void Controller::reset(const mc_control::ControllerResetData & data)
   mc_control::fsm::Controller::reset(data);
 }
 
-  const mc_rbdyn::Contact & Controller::getContact(const std::string & s)
+const mc_rbdyn::Contact & Controller::getContact(const std::string & s)
 {
   for(const auto & c : solver().contacts())
   {
