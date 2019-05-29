@@ -45,10 +45,11 @@ void DynamicContactState::start(mc_control::fsm::Controller & ctlInput)
   ctl.miPredictorPtr->resetDataStructure();
 
   std::cout << "About to create new constriants" << std::endl;
-  
+
   boundTorqueJump_.reset(new mc_impact::BoundJointTorqueJump(*ctl.miPredictorPtr, ctl.timeStep, ctl.timeStep,
-    state_conf_("JumpTorqueMultiplier", 5.0))); ctl.solver().addConstraint(boundTorqueJump_.get());
-    
+    state_conf_("JumpTorqueMultiplier", 5.0)));
+  ctl.solver().addConstraint(boundTorqueJump_.get());
+
 
   boundVelocityJump_.reset(new mc_impact::BoundJointVelocityJump(*ctl.miPredictorPtr, ctl.timeStep));
 
@@ -67,7 +68,7 @@ bool DynamicContactState::run(mc_control::fsm::Controller & ctlInput)
   surfaceNormal << 1, 0, 0;
   // Convert surfaceNormal to the local frame of the right wrist. 
   sva::PTransformd X_0_ee = ctl.robot().bodyPosW("r_wrist");
-   
+
   ctl.miPredictorPtr->run( X_0_ee.rotation()*surfaceNormal + X_0_ee.translation());
 
   //if(rPosTaskPtr_->eval().norm() <= 0.01)
@@ -87,7 +88,7 @@ void DynamicContactState::teardown(mc_control::fsm::Controller & ctl_)
   auto & ctl = static_cast<Controller &>(ctl_);
   ctl.solver().removeTask(rPosTaskPtr_);
   ctl.solver().removeTask(ctl.comTaskPtr);
-  // ctl.solver().removeConstraint(boundTorqueJump_.get());
+  ctl.solver().removeConstraint(boundTorqueJump_.get());
   ctl.solver().removeConstraint(boundVelocityJump_.get());
 }
 
