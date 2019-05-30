@@ -12,6 +12,7 @@ void DynamicContactState::configure(const mc_rtc::Configuration & config)
 
 void DynamicContactState::start(mc_control::fsm::Controller & ctlInput)
 {
+
   std::cout<<"Starting DynamicContactState"<<std::endl;
 
   auto & ctl = static_cast<Controller &>(ctlInput);
@@ -92,12 +93,21 @@ void DynamicContactState::start(mc_control::fsm::Controller & ctlInput)
 
   //ctl.solver().updateConstrSize();
 
+/* 
+
+  logger().addLogEntry("r_ankle_predict_OSD_QP_force", [this]() {
+		  Eigen::VectorXd force = miPredictorPtr->getQPForce("r_sole");
+		  return force;
+  });
+*/
 }
 
 bool DynamicContactState::run(mc_control::fsm::Controller & ctlInput)
 {
   auto & ctl = static_cast<Controller &>(ctlInput);
   std::cout << "DynamicsState: The right ef error is: " << rPosTaskPtr_->eval().norm() << std::endl;
+  //std::cout << "DynamicsState: The right sole OSD force is: " << ctl.miPredictorPtr->getOsdForce("l_sole")<< std::endl;
+  //std::cout << "DynamicsState: The right sole OSD force is: " << ctl.miPredictorPtr->getOsdForce("r_sole")<< std::endl;
 
   Eigen::Vector3d surfaceNormal;
   surfaceNormal << 1, 0, 0;

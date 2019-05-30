@@ -221,7 +221,10 @@ boundTorqueJump_.reset(new mc_impact::BoundJointTorqueJump(*miPredictorPtr, time
 
   logger().addLogEntry("q_acc", [this]() { return rbd::dofToVector(realRobots().robot().mb(), realRobots().robot().mbc().alphaD); });
 
-  logger().addLogEntry("tau", [this]() { return rbd::dofToVector(realRobots().robot().mb(), realRobots().robot().mbc().jointTorque); });
+  //logger().addLogEntry("tau", [this]() { return rbd::dofToVector(realRobots().robot().mb(), realRobots().robot().mbc().jointTorque); });
+  logger().addLogEntry("tau_QP", [this]() { 
+		  return rbd::dofToVector(robot().mb(), robot().mbc().jointTorque);
+		  });
 
   logger().addLogEntry("delta_q_vel", [this]() { return miPredictorPtr->getJointVelocityJump(); });
 
@@ -331,6 +334,58 @@ Eigen::VectorXd result = middle - lower;
     return middle;
   });
 
+  //----------------------------- check the impulsive induced jump to COP  
+  
+  logger().addLogEntry("CoP_LeftFoot_impulse_jump", [this]() {
+    sva::PTransformd X_0_lSole = robot().bodyPosW("l_sole");
+    sva::PTransformd X_0_rSole = robot().bodyPosW("r_sole");
+    sva::PTransformd X_0_ee = robot().bodyPosW("r_wrist");
+
+    sva::PTransformd X_rSole_lSole = X_0_lSole* X_0_rSole.inv();
+    sva::ForceVecd r_impulse = 
+            X_rSole_lSole.dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), miPredictorPtr->getImpulsiveForce("r_sole")));
+    Eigen::Vector3d l_impulse = miPredictorPtr->getImpulsiveForce("l_sole");
+    sva::PTransformd X_ee_lSole = X_0_lSole* X_0_ee.inv();
+    sva::ForceVecd f_ee =
+            X_ee_lSole.dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), miPredictorPtr->getImpulsiveForce()));
+
+  double denominator = (
+		 f_ee.force().z() + r_impulse.force().z() + l_impulse.z() 
+		 + robot().forceSensor("LeftFootForceSensor").force().z()  
+		  );  
+    
+  Eigen::Vector3d tempZMP;
+  tempZMP.x() = - ( f_ee.moment().y() + r_impulse.moment().y() )/denominator;
+  tempZMP.y() = ( f_ee.moment().x() + r_impulse.moment().x() )/denominator;
+  tempZMP.z() = 0;
+  return tempZMP;
+		  });
+
+  logger().addLogEntry("CoP_RightFoot_impulse_jump", [this]() {
+    sva::PTransformd X_0_lSole = robot().bodyPosW("l_sole");
+    sva::PTransformd X_0_rSole = robot().bodyPosW("r_sole");
+    sva::PTransformd X_0_ee = robot().bodyPosW("r_wrist");
+
+    sva::PTransformd X_lSole_rSole = X_0_rSole* X_0_lSole.inv();
+    sva::ForceVecd l_impulse = 
+            X_lSole_rSole.dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), miPredictorPtr->getImpulsiveForce("l_sole")));
+
+    Eigen::Vector3d r_impulse = miPredictorPtr->getImpulsiveForce("r_sole");
+    sva::PTransformd X_ee_rSole = X_0_rSole* X_0_ee.inv();
+    sva::ForceVecd f_ee =
+            X_ee_rSole.dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), miPredictorPtr->getImpulsiveForce()));
+
+  double denominator = (
+		 f_ee.force().z() + l_impulse.force().z() + r_impulse.z() 
+		 + robot().forceSensor("RightFootForceSensor").force().z()  
+		  );  
+    
+  Eigen::Vector3d tempZMP;
+  tempZMP.x() = - ( f_ee.moment().y() + l_impulse.moment().y() )/denominator;
+  tempZMP.y() = ( f_ee.moment().x() + l_impulse.moment().x() )/denominator;
+  tempZMP.z() = 0;
+  return tempZMP;
+		  });
   //----------------------------- check the impulsive joint torque
 
   logger().addLogEntry("test_delta_tau_upper", [this]() {
@@ -353,6 +408,31 @@ Eigen::VectorXd result = middle - lower;
     return middle;
   });
   //----------------------------- check the perturbed ZMP
+ /* 
+  logger().addLogEntry("ee_predict_acc_force", [this]() {
+		 return  miPredictorPtr->getAccForce("r_wrist");
+  });
+  
+  logger().addLogEntry("l_ankle_predict_OSD_force", [this]() {
+		  Eigen::VectorXd force = miPredictorPtr->getOsdForce("l_sole");
+		  return force;
+  });
+
+
+ logger().addLogEntry("l_ankle_predict_acc_force", [this]() {
+		 return  miPredictorPtr->getAccForce("l_sole");
+  });
+ 
+ logger().addLogEntry("r_ankle_predict_OSD_force", [this]() {
+		 Eigen::VectorXd force = miPredictorPtr->getOsdForce("r_sole");
+		 return force;
+  });
+
+logger().addLogEntry("r_ankle_predict_acc_force", [this]() {
+		return miPredictorPtr->getAccForce("r_sole");
+  });
+*/
+
 
   logger().addLogEntry("l_ankle_predict_impact_impulse_COM", [this]() {
     sva::PTransformd X_b_CoM = sva::PTransformd(robot().com());
@@ -374,37 +454,59 @@ Eigen::VectorXd result = middle - lower;
     return temp;
   });
 
+  logger().addLogEntry("ZMP_QP", [this]() {
+    sva::PTransformd X_0_CoM = sva::PTransformd(robot().com());
+    sva::PTransformd X_0_rSole = robot().bodyPosW("r_sole");
+    sva::PTransformd X_rSole_CoM = X_0_CoM * X_0_rSole.inv();
+    sva::PTransformd X_0_lSole = robot().bodyPosW("l_sole");
+    sva::PTransformd X_lSole_CoM = X_0_CoM * X_0_lSole.inv();
+    
+    sva::ForceVecd F_r_qp = X_rSole_CoM.dualMul(solver().desiredContactForce(getContact("RightFoot")));
+
+    sva::ForceVecd F_l_qp = X_lSole_CoM.dualMul(solver().desiredContactForce(getContact("LeftFoot")));
+    
+ double denominator =
+         (
+	  F_l_qp.force().z() + F_r_qp.force().z()
+	 );
+ Eigen::Vector3d tempZMP;
+ tempZMP.x() = -(F_r_qp.force().y() + F_l_qp.force().y()) / denominator;
+ tempZMP.y() = -(F_r_qp.force().x() + F_l_qp.force().x()) / denominator;
+    
+
+ return tempZMP;
+		  });
   logger().addLogEntry("ZMP_pertubation", [this]() {
     sva::PTransformd X_0_CoM = sva::PTransformd(robot().com());
     // sva::PTransformd X_0_rSole = robot().surface("RightFoot").X_0_s(robot());
     sva::PTransformd X_0_rSole = robot().bodyPosW("r_sole");
     sva::PTransformd X_rSole_CoM = X_0_CoM * X_0_rSole.inv();
-    /*
-        sva::ForceVecd f_r_sole =
+    
+    sva::ForceVecd f_r_sole =
             X_rSole_CoM.dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), miPredictorPtr->getImpulsiveForce("r_sole")));
-    */
+    
     // sva::PTransformd X_lSole_b = robot().bodyTransform("l_sole");
     // sva::PTransformd X_0_lSole = robot().surface("LeftFoot").X_0_s(robot());
     sva::PTransformd X_0_lSole = robot().bodyPosW("l_sole");
     sva::PTransformd X_lSole_CoM = X_0_CoM * X_0_lSole.inv();
-    /*
+    
         sva::ForceVecd f_l_sole =
             X_lSole_CoM.dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), miPredictorPtr->getImpulsiveForce("l_sole")));
-    */
-    sva::ForceVecd f_l_sole = miPredictorPtr->getImpulsiveForceCOM("l_sole");
-    sva::ForceVecd f_r_sole = miPredictorPtr->getImpulsiveForceCOM("r_sole");
+    
+   // sva::ForceVecd f_l_sole = miPredictorPtr->getImpulsiveForceCOM("l_sole");
+    //sva::ForceVecd f_r_sole = miPredictorPtr->getImpulsiveForceCOM("r_sole");
     // sva::PTransformd X_lSole_b = robot().bodyTransform("l_sole");
-    // sva::PTransformd X_0_ee = robot().bodyPosW("r_wrist");
-    // sva::PTransformd X_ee_CoM = X_0_CoM * X_0_ee.inv();
-    /*
-        sva::ForceVecd f_ee =
+    sva::PTransformd X_0_ee = robot().bodyPosW("r_wrist");
+    sva::PTransformd X_ee_CoM = X_0_CoM * X_0_ee.inv();
+    
+    sva::ForceVecd f_ee =
             X_ee_CoM.dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), miPredictorPtr->getImpulsiveForce()));
-    */
-    sva::ForceVecd f_ee = miPredictorPtr->getImpulsiveForceCOM();
+    
+    //sva::ForceVecd f_ee = miPredictorPtr->getImpulsiveForceCOM();
 
-    sva::ForceVecd F_r_qp = solver().desiredContactForce(getContact("RightFoot"));
+    sva::ForceVecd F_r_qp = X_rSole_CoM.dualMul(solver().desiredContactForce(getContact("RightFoot")));
 
-    sva::ForceVecd F_l_qp = solver().desiredContactForce(getContact("LeftFoot"));
+    sva::ForceVecd F_l_qp = X_lSole_CoM.dualMul(solver().desiredContactForce(getContact("LeftFoot")));
     
      double denominator =
          (
