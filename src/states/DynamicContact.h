@@ -3,8 +3,11 @@
 #include <mc_control/fsm/State.h>
 #include <mc_tasks/PositionTask.h>
 
-// #include "BoundJointTorqueJump.h"
-// #include "BoundJointVelocityJump.h"
+#include "BoundJointTorqueJump.h"
+#include "BoundJointVelocityJump.h"
+#include "PositiveContactForceWithImpulse.h"
+#include "COPInsideContactAreaWithImpulse.h" 
+
 
 struct DynamicContactState : mc_control::fsm::State
 {
@@ -23,6 +26,13 @@ protected:
   double contactVelocity_;
   mc_rtc::Configuration state_conf_;
 
+  std::unique_ptr<mc_impact::BoundJointTorqueJump> boundTorqueJump_;
+  std::unique_ptr<mc_impact::BoundJointVelocityJump> boundVelocityJump_;
+  std::unique_ptr<mc_impact::PositiveContactForceWithImpulse> positiveContactForceLeftFoot_;
+  std::unique_ptr<mc_impact::PositiveContactForceWithImpulse> positiveContactForceRightFoot_;
+
+  std::unique_ptr<mc_impact::COPInsideContactAreaWithImpulse> COPImpulseLeftFoot_;
+  std::unique_ptr<mc_impact::COPInsideContactAreaWithImpulse> COPImpulseRightFoot_;
   //  std::unique_ptr<mc_impact::BoundJointTorqueJump> boundTorqueJump_;
   // std::unique_ptr<mc_impact::BoundJointVelocityJump> boundVelocityJump_;
 };

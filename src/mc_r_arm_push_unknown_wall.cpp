@@ -5,7 +5,7 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
 {
 
   forceThreshold = config()("contact_detection")("ForceThreshold");
-
+  impactIndicator_ = -20.0;
   std::cout << "Kinematics and Dynamics constraints are created." << std::endl;
   solver().addConstraintSet(kinematicsConstraint);
   solver().addConstraintSet(dynamicsConstraint);
@@ -115,6 +115,61 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
   miPredictorPtr->setContact("l_sole");
   miPredictorPtr->setContact("r_sole");
 
+
+//----------------------------------- Add additional constraints 
+    // ---------------------------- constructor: add modified constraints
+    
+  std::cout << "About to create new constriants" << std::endl;
+boundTorqueJump_.reset(new mc_impact::BoundJointTorqueJump(*miPredictorPtr, timeStep, timeStep, 3.5));
+  solver().addConstraint(boundTorqueJump_.get());
+
+
+  // state_conf_.load(config);
+/*  
+     boundVelocityJump_.reset(new mc_impact::BoundJointVelocityJump(*miPredictorPtr, timeStep));
+  std::cout << "bound velocity jump constraint is created" << std::endl;
+   solver().addConstraint(boundVelocityJump_.get());
+  std::cout << "bound velocity jump constraint is added" << std::endl;
+*/ 
+  // ------------------------------------ Positive contact force
+  /*
+  positiveContactForceLeftFoot_.reset(
+      new mc_impact::PositiveContactForceWithImpulse(solver(), getContact("LeftFoot"), *miPredictorPtr));
+
+  positiveContactForceRightFoot_.reset(
+      new mc_impact::PositiveContactForceWithImpulse(solver(), getContact("RightFoot"), *miPredictorPtr));
+
+  std::cout << "Positive contact force constraint is created" << std::endl;
+
+  solver().addConstraint(positiveContactForceLeftFoot_.get());
+  solver().addConstraint(positiveContactForceRightFoot_.get());
+  
+  std::cout << "Positive contact force constraint is added" << std::endl;
+  */
+   // ------------------------------------ Zero slippage
+  /*
+  COPImpulseLeftFoot_.reset(
+		 new mc_impact::COPInsideContactAreaWithImpulse(solver(), getContact("LeftFoot"), *miPredictorPtr) 
+		  ); 
+
+  COPImpulseRightFoot_.reset(
+		 new mc_impact::COPInsideContactAreaWithImpulse(solver(), getContact("RightFoot"), *miPredictorPtr) 
+		  ); 
+
+
+  solver().addConstraint(COPImpulseLeftFoot_.get());
+  solver().addConstraint(COPImpulseRightFoot_.get());
+  std::cout << "Zero slippage constraint is added." <<std::endl;
+*/
+
+  // Once for all the constriants
+  solver().updateConstrSize();
+
+
+
+
+
+
   logger().addLogEntry("ee_Vel_impact_jump", [this]() {
     // Eigen::VectorXd eeVelJump =
     return miPredictorPtr->getEeVelocityJump();
@@ -160,13 +215,13 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
 
   logger().addLogEntry("r_ankle_predict_impact_impulse",
                        [this]() { return miPredictorPtr->getImpulsiveForce("r_sole"); });
-  logger().addLogEntry("q_position", [this]() { return rbd::dofToVector(robot().mb(), robot().mbc().q); });
+  logger().addLogEntry("q_position", [this]() { return rbd::dofToVector(realRobots().robot().mb(), realRobots().robot().mbc().q); });
 
-  logger().addLogEntry("q_vel", [this]() { return rbd::dofToVector(robot().mb(), robot().mbc().alpha); });
+  logger().addLogEntry("q_vel", [this]() { return rbd::dofToVector(realRobots().robot().mb(), realRobots().robot().mbc().alpha); });
 
-  logger().addLogEntry("q_acc", [this]() { return rbd::dofToVector(robot().mb(), robot().mbc().alphaD); });
+  logger().addLogEntry("q_acc", [this]() { return rbd::dofToVector(realRobots().robot().mb(), realRobots().robot().mbc().alphaD); });
 
-  logger().addLogEntry("tau", [this]() { return rbd::dofToVector(robot().mb(), robot().mbc().jointTorque); });
+  logger().addLogEntry("tau", [this]() { return rbd::dofToVector(realRobots().robot().mb(), realRobots().robot().mbc().jointTorque); });
 
   logger().addLogEntry("delta_q_vel", [this]() { return miPredictorPtr->getJointVelocityJump(); });
 
@@ -207,6 +262,53 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
   });
 
   //----------------------------- check the joint velocity jump
+logger().addLogEntry("test_delta_q_vel_upper-diff-direct", [this]() {
+    Eigen::VectorXd result =
+        rbd::dofToVector(miPredictorPtr->getRobot().mb(), miPredictorPtr->getRobot().vu())
+        - 
+         (miPredictorPtr->getJointVelocityJump("r_sole")
+         + rbd::dofToVector(robot().mb(), robot().mbc().alpha)
+	 );
+
+    return result;
+  });
+logger().addLogEntry("test_delta_q_vel_lower-diff-direct", [this]() {
+    Eigen::VectorXd result =
+         (miPredictorPtr->getJointVelocityJump("r_sole")
+         + rbd::dofToVector(robot().mb(), robot().mbc().alpha)
+	 )
+	- 
+        rbd::dofToVector(miPredictorPtr->getRobot().mb(), miPredictorPtr->getRobot().vl())
+	 ;
+
+    return result;
+  });
+
+
+logger().addLogEntry("test_delta_q_vel_upper-diff", [this]() {
+    Eigen::VectorXd upper =
+        rbd::dofToVector(miPredictorPtr->getRobot().mb(), miPredictorPtr->getRobot().vu())
+        - miPredictorPtr->getJacobianDeltaAlpha() * rbd::dofToVector(robot().mb(), robot().mbc().alpha)
+        - rbd::dofToVector(robot().mb(), robot().mbc().alpha);
+    Eigen::VectorXd middle = miPredictorPtr->getJacobianDeltaAlpha()
+                             * rbd::dofToVector(robot().mb(), robot().mbc().alphaD)
+                             * miPredictorPtr->getImpactDuration_();
+    Eigen::VectorXd result = upper - middle;
+    return result;
+  });
+logger().addLogEntry("test_delta_q_vel_lower-diff", [this]() {
+Eigen::VectorXd lower =
+        rbd::dofToVector(miPredictorPtr->getRobot().mb(), miPredictorPtr->getRobot().vl())
+        - miPredictorPtr->getJacobianDeltaAlpha() * rbd::dofToVector(robot().mb(), robot().mbc().alpha)
+        - rbd::dofToVector(robot().mb(), robot().mbc().alpha);
+
+        Eigen::VectorXd middle = miPredictorPtr->getJacobianDeltaAlpha()
+                             * rbd::dofToVector(robot().mb(), robot().mbc().alphaD)
+                             * miPredictorPtr->getImpactDuration_();
+Eigen::VectorXd result = middle - lower;
+    return result; 
+  });
+
 
   logger().addLogEntry("test_delta_q_vel_upper", [this]() {
     Eigen::VectorXd upper =
@@ -303,18 +405,24 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
     sva::ForceVecd F_r_qp = solver().desiredContactForce(getContact("RightFoot"));
 
     sva::ForceVecd F_l_qp = solver().desiredContactForce(getContact("LeftFoot"));
-    /*
+    
      double denominator =
-         (F_l_qp.force().z() + F_r_qp.force().z() + f_r_sole.force().z() + f_l_sole.force().z() + f_ee.force().z());
- */
-
+         (
+	  F_l_qp.force().z() + F_r_qp.force().z() + 
+	  f_r_sole.force().z() + f_l_sole.force().z() + f_ee.force().z());
+ 
+/*
     double denominator = (robot().forceSensor("RightFootForceSensor").force().z()
                           + robot().forceSensor("LeftFootForceSensor").force().z() + f_r_sole.force().z()
                           + f_l_sole.force().z() + f_ee.force().z());
-
+*/
     Eigen::Vector3d tempZMP;
     tempZMP.x() = -(f_r_sole.moment().y() + f_l_sole.moment().y() + f_ee.moment().y()) / denominator;
+    //tempZMP.x() = -(f_r_sole.moment().y() + f_l_sole.moment().y() ) / denominator;
+    //tempZMP.x() = -( f_ee.moment().y()) / denominator;
     tempZMP.y() = (f_r_sole.moment().x() + f_l_sole.moment().x() + f_ee.moment().x()) / denominator;
+    //tempZMP.y() = (f_r_sole.moment().x() + f_l_sole.moment().x()) / denominator;
+    //tempZMP.y() = ( f_ee.moment().x()) / denominator;
     tempZMP.z() = 0;
     return tempZMP;
   });
@@ -334,6 +442,12 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
     return solver().desiredContactForce(getContact("RightFoot"));
     // return F;
   });
+
+  logger().addLogEntry("impact_time_indicator", [this]() {
+    return impactIndicator_; 
+    // return F;
+  });
+
 
   //-----------------------------
   logger().addLogEntry("robot_com", [this]() { return robot().com(); });
@@ -377,50 +491,7 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
   // std::cout << "Operational space dynamics Predictor is about to be created." << std::endl;
   // Add constriants:
 
-  // ---------------------------- constructor: add modified constraints
-  std::cout << "About to create new constriants" << std::endl;
-
-  // state_conf_.load(config);
-  boundTorqueJump_.reset(new mc_impact::BoundJointTorqueJump(*miPredictorPtr, timeStep, timeStep, 3.5));
-  solver().addConstraint(boundTorqueJump_.get());
-
-  // boundVelocityJump_.reset(new mc_impact::BoundJointVelocityJump(*miPredictorPtr, timeStep));
-  std::cout << "bound velocity jump constraint is created" << std::endl;
-  // solver().addConstraint(boundVelocityJump_.get());
-  std::cout << "bound velocity jump constraint is added" << std::endl;
-  // ------------------------------------ Positive contact force
-  
-  positiveContactForceLeftFoot_.reset(
-      new mc_impact::PositiveContactForceWithImpulse(solver(), getContact("LeftFoot"), *miPredictorPtr));
-
-  positiveContactForceRightFoot_.reset(
-      new mc_impact::PositiveContactForceWithImpulse(solver(), getContact("RightFoot"), *miPredictorPtr));
-
-  std::cout << "Positive contact force constraint is created" << std::endl;
-
-  solver().addConstraint(positiveContactForceLeftFoot_.get());
-  solver().addConstraint(positiveContactForceRightFoot_.get());
-  
-  std::cout << "Positive contact force constraint is added" << std::endl;
-
-  // ------------------------------------ Zero slippage
-  /*
-  COPImpulseLeftFoot_.reset(
-		 new mc_impact::COPInsideContactAreaWithImpulse(solver(), getContact("LeftFoot"), *miPredictorPtr) 
-		  ); 
-
-  COPImpulseRightFoot_.reset(
-		 new mc_impact::COPInsideContactAreaWithImpulse(solver(), getContact("RightFoot"), *miPredictorPtr) 
-		  ); 
-
-
-  solver().addConstraint(COPImpulseLeftFoot_.get());
-  solver().addConstraint(COPImpulseRightFoot_.get());
-  std::cout << "Zero slippage constraint is added." <<std::endl;
-*/
-
-  // Once for all the constriants
-  solver().updateConstrSize();
+ 
 }
 
 const mc_rbdyn::Robot & Controller::realRobot() const
@@ -433,6 +504,7 @@ bool Controller::rArmInContact()
 
   if(robot().forceSensor("RightHandForceSensor").force().z() > forceThreshold)
   {
+    impactIndicator_ = 20;
     return true;
   }
   else
@@ -453,7 +525,7 @@ void Controller::reset(const mc_control::ControllerResetData & data)
 
   /** Initialize FSM stuff */
   mc_control::fsm::Controller::reset(data);
-}
+  }
 
 const mc_rbdyn::Contact & Controller::getContact(const std::string & s)
 {

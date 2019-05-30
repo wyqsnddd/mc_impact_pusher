@@ -7,8 +7,6 @@
 
 #include "BoundJointTorqueJump.h"
 #include "BoundJointVelocityJump.h"
-#include "PositiveContactForceWithImpulse.h"
-#include "COPInsideContactAreaWithImpulse.h" 
 
 struct Controller : public mc_control::fsm::Controller
 {
@@ -17,7 +15,9 @@ struct Controller : public mc_control::fsm::Controller
   void reset(const mc_control::ControllerResetData & data) override;
 
   std::shared_ptr<mc_tasks::MetaTask> comTaskPtr;
-
+  std::unique_ptr<mc_impact::BoundJointTorqueJump> boundTorqueJump_;
+  std::unique_ptr<mc_impact::BoundJointVelocityJump> boundVelocityJump_;
+ 
   // Force sensor threshold
   double forceThreshold = 3.0;
 
@@ -26,17 +26,12 @@ struct Controller : public mc_control::fsm::Controller
   bool rArmInContact();
 
   std::unique_ptr<mi_impactPredictor> miPredictorPtr;
-  std::unique_ptr<mc_impact::BoundJointTorqueJump> boundTorqueJump_;
-  std::unique_ptr<mc_impact::BoundJointVelocityJump> boundVelocityJump_;
-  std::unique_ptr<mc_impact::PositiveContactForceWithImpulse> positiveContactForceLeftFoot_;
-  std::unique_ptr<mc_impact::PositiveContactForceWithImpulse> positiveContactForceRightFoot_;
-
-  std::unique_ptr<mc_impact::COPInsideContactAreaWithImpulse> COPImpulseLeftFoot_;
-  std::unique_ptr<mc_impact::COPInsideContactAreaWithImpulse> COPImpulseRightFoot_;
+  
+  const mc_rbdyn::Contact & getContact(const std::string & s);
 private:
   const mc_rbdyn::Robot & realRobot() const;
+  double impactIndicator_; 
 
-  const mc_rbdyn::Contact & getContact(const std::string & s);
 
   // mc_rtc::Configuration state_conf_;
 };

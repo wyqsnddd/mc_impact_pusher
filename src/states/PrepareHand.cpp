@@ -44,13 +44,16 @@ void PrepareHandState::start(mc_control::fsm::Controller & ctlInput)
   // desiredRotation = sva::RotY(-M_PI/2)
   sva::PTransformd right_raise_hand(desiredRotation * rTransformZero_.rotation().inverse(), translation_offset);
   rEfTaskPtr_->add_ef_pose(right_raise_hand);
+
+
 }
 
 bool PrepareHandState::run(mc_control::fsm::Controller & ctlInput)
 {
 
   auto & ctl = static_cast<Controller &>(ctlInput);
-  // std::cout << "About to update predictor " << std::endl;
+  std::cout << "PrepareState: the right ef error is: "<<rEfTaskPtr_->eval().norm() << std::endl;
+
   Eigen::Vector3d surfaceNormal;
   surfaceNormal << 1, 0, 0;
 

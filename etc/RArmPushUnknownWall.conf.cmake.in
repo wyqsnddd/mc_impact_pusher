@@ -17,7 +17,7 @@
     "contact_detection":
     {
 	    "UseForceSensor": true, // if true, use the force sensors to detect contact, otherwise use geometric sensor
-	    "ForceThreshold": 15.0, // Force threshold that triggers transition. Only used if UseForceSensor is true
+	    "ForceThreshold": 20.0, // Force threshold that triggers transition. Only used if UseForceSensor is true
 	    "ContactThreshold": 1e-5, // Contact distance threshold that triggers transition.
     },
     // Lifting height (m)
@@ -125,7 +125,8 @@
             "weight": 100.0
         },
         "leftEfTask": {"bodyName" : "l_wrist", "stiffness" : 20.0, "weight" : 1000.0, "bound" : 0.1 },
-        "rightEfTask": {"bodyName" : "r_wrist", "stiffness" : 20.0, "weight" : 1000.0, "bound" : 0.1 },
+        "rightEfTask": {"bodyName" : "r_wrist", "stiffness" : 10.0, "weight" : 300.0, "bound" : 0.1 },
+	"rightEfTaskDynamic": {"bodyName" : "r_wrist", "stiffness" : 10.0, "weight" : 300.0, "bound" : 0.1 },
     },
     "states": {
       "Prepare":
@@ -143,7 +144,8 @@
         "rightEfStiffness": 0.0,
         "rightEfDamping": 300.0,
 	"coeRestitution": 0.8,
-	"coeFrictionDeduction": 0.15,
+	"coeFrictionDeduction2": 0.15,
+	"coeFrictionDeduction": 0.2,
 	"delta_dt": 0.005,
 	"useLinearJacobian": true,
 	"impactBodyName": "r_wrist",

@@ -4,6 +4,7 @@
 
 #include "../mc_r_arm_push_unknown_wall.h"
 
+
 void DynamicContactState::configure(const mc_rtc::Configuration & config)
 {
   state_conf_.load(config);
@@ -11,15 +12,15 @@ void DynamicContactState::configure(const mc_rtc::Configuration & config)
 
 void DynamicContactState::start(mc_control::fsm::Controller & ctlInput)
 {
+  std::cout<<"Starting DynamicContactState"<<std::endl;
 
-  output("Starting DynamicContactState");
   auto & ctl = static_cast<Controller &>(ctlInput);
 
   const auto & conf = ctl.config()("hrp4");
 
   rPosTaskPtr_ =
-      std::make_shared<mc_tasks::PositionTask>(conf("rightEfTask")("bodyName"), ctl.robots(), 0,
-                                               conf("rightEfTask")("stiffness"), conf("rightEfTask")("weight"));
+      std::make_shared<mc_tasks::PositionTask>(conf("rightEfTaskDynamic")("bodyName"), ctl.robots(), 0,
+                                               conf("rightEfTaskDynamic")("stiffness"), conf("rightEfTaskDynamic")("weight"));
   ctl.solver().addTask(rPosTaskPtr_);
 
   Eigen::Vector3d referenceVelocity, pushDepth, currentPos;
@@ -43,26 +44,60 @@ void DynamicContactState::start(mc_control::fsm::Controller & ctlInput)
     rPosTaskPtr_->damping(static_cast<double>(state_conf_("rightEfDamping")));
   }
   ctl.miPredictorPtr->resetDataStructure();
+/*
+  std::cout << "About to create new constriants" << std::endl;
+
+  boundTorqueJump_.reset(new mc_impact::BoundJointTorqueJump(*ctl.miPredictorPtr, ctl.timeStep, ctl.timeStep,
+			  state_conf_("JumpTorqueMultiplier", 5.0)));
+  ctl.solver().addConstraint(boundTorqueJump_.get());
+
+  boundVelocityJump_.reset(new mc_impact::BoundJointVelocityJump(*ctl.miPredictorPtr, ctl.timeStep));
+
+  std::cout << "bound velocity jump constraint is created" << std::endl;
+  ctl.solver().addConstraint(boundVelocityJump_.get());
+  std::cout << "bound velocity jump constraint is added" << std::endl;
+
+*/
+
+  // ------------------------------------ Positive contact force
   /*
-    std::cout << "About to create new constriants" << std::endl;
+  positiveContactForceLeftFoot_.reset(
+      new mc_impact::PositiveContactForceWithImpulse(ctl.solver(), ctl.getContact("LeftFoot"), *ctl.miPredictorPtr));
 
-    boundTorqueJump_.reset(new mc_impact::BoundJointTorqueJump(*ctl.miPredictorPtr, ctl.timeStep, ctl.timeStep,
-      state_conf_("JumpTorqueMultiplier", 5.0)));
-    ctl.solver().addConstraint(boundTorqueJump_.get());
+  positiveContactForceRightFoot_.reset(
+      new mc_impact::PositiveContactForceWithImpulse(ctl.solver(), ctl.getContact("RightFoot"), *ctl.miPredictorPtr));
 
-    boundVelocityJump_.reset(new mc_impact::BoundJointVelocityJump(*ctl.miPredictorPtr, ctl.timeStep));
+  std::cout << "Positive contact force constraint is created" << std::endl;
 
-    std::cout << "bound velocity jump constraint is created" << std::endl;
-    ctl.solver().addConstraint(boundVelocityJump_.get());
-    std::cout << "bound velocity jump constraint is added" << std::endl;
-    ctl.solver().updateConstrSize();
-   */
+  ctl.solver().addConstraint(positiveContactForceLeftFoot_.get());
+  ctl.solver().addConstraint(positiveContactForceRightFoot_.get());
+  
+  std::cout << "Positive contact force constraint is added" << std::endl;
+  */
+   // ------------------------------------ Zero slippage
+ /* 
+  COPImpulseLeftFoot_.reset(
+		 new mc_impact::COPInsideContactAreaWithImpulse(ctl.solver(), ctl.getContact("LeftFoot"), *ctl.miPredictorPtr) 
+		  ); 
+
+  COPImpulseRightFoot_.reset(
+		 new mc_impact::COPInsideContactAreaWithImpulse(ctl.solver(), ctl.getContact("RightFoot"), *ctl.miPredictorPtr) 
+		  ); 
+
+
+  ctl.solver().addConstraint(COPImpulseLeftFoot_.get());
+  ctl.solver().addConstraint(COPImpulseRightFoot_.get());
+  std::cout << "Zero slippage constraint is added." <<std::endl;
+*/
+
+  //ctl.solver().updateConstrSize();
+
 }
 
 bool DynamicContactState::run(mc_control::fsm::Controller & ctlInput)
 {
   auto & ctl = static_cast<Controller &>(ctlInput);
-  std::cout << "The right ef error is: " << rPosTaskPtr_->eval().norm() << std::endl;
+  std::cout << "DynamicsState: The right ef error is: " << rPosTaskPtr_->eval().norm() << std::endl;
 
   Eigen::Vector3d surfaceNormal;
   surfaceNormal << 1, 0, 0;
@@ -75,8 +110,10 @@ bool DynamicContactState::run(mc_control::fsm::Controller & ctlInput)
   if(ctl.rArmInContact())
   {
     // Output the transition signal such that we can move on according to the transitions
-    // ctl.solver().removeTask(rPosTaskPtr_);
-    output("OK");
+    
+    output("ImpactDetected");
+    //output("OK");
+    ctl.solver().removeTask(rPosTaskPtr_);
     return true;
   }
 
@@ -89,9 +126,9 @@ void DynamicContactState::teardown(mc_control::fsm::Controller & ctl_)
   ctl.solver().removeTask(rPosTaskPtr_);
   ctl.solver().removeTask(ctl.comTaskPtr);
   ctl.solver().removeConstraint(ctl.boundTorqueJump_.get());
-  ctl.solver().removeConstraint(ctl.boundVelocityJump_.get());
-  ctl.solver().removeConstraint(ctl.positiveContactForceRightFoot_.get());
-  ctl.solver().removeConstraint(ctl.positiveContactForceRightFoot_.get());
+  //ctl.solver().removeConstraint(ctl.boundVelocityJump_.get());
+  //ctl.solver().removeConstraint(positiveContactForceRightFoot_.get());
+  //ctl.solver().removeConstraint(positiveContactForceRightFoot_.get());
 }
 
 EXPORT_SINGLE_STATE("DynamicContact", DynamicContactState)
