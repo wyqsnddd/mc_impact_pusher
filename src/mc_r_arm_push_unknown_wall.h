@@ -7,6 +7,7 @@
 
 #include "BoundJointTorqueJump.h"
 #include "BoundJointVelocityJump.h"
+#include "COPInsideContactAreaWithImpulse.h" 
 
 struct Controller : public mc_control::fsm::Controller
 {
@@ -17,7 +18,9 @@ struct Controller : public mc_control::fsm::Controller
   std::shared_ptr<mc_tasks::MetaTask> comTaskPtr;
   std::unique_ptr<mc_impact::BoundJointTorqueJump> boundTorqueJump_;
   std::unique_ptr<mc_impact::BoundJointVelocityJump> boundVelocityJump_;
- 
+  std::unique_ptr<mc_impact::COPInsideContactAreaWithImpulse> COPImpulseLeftFoot_;
+  std::unique_ptr<mc_impact::COPInsideContactAreaWithImpulse> COPImpulseRightFoot_;
+
   // Force sensor threshold
   double forceThreshold = 3.0;
 

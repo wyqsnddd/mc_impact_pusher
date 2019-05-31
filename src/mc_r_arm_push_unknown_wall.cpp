@@ -125,12 +125,12 @@ boundTorqueJump_.reset(new mc_impact::BoundJointTorqueJump(*miPredictorPtr, time
 
 
   // state_conf_.load(config);
-/*  
+  
      boundVelocityJump_.reset(new mc_impact::BoundJointVelocityJump(*miPredictorPtr, timeStep));
   std::cout << "bound velocity jump constraint is created" << std::endl;
    solver().addConstraint(boundVelocityJump_.get());
   std::cout << "bound velocity jump constraint is added" << std::endl;
-*/ 
+ 
   // ------------------------------------ Positive contact force
   /*
   positiveContactForceLeftFoot_.reset(
@@ -147,20 +147,21 @@ boundTorqueJump_.reset(new mc_impact::BoundJointTorqueJump(*miPredictorPtr, time
   std::cout << "Positive contact force constraint is added" << std::endl;
   */
    // ------------------------------------ Zero slippage
-  /*
+/*  
   COPImpulseLeftFoot_.reset(
 		 new mc_impact::COPInsideContactAreaWithImpulse(solver(), getContact("LeftFoot"), *miPredictorPtr) 
 		  ); 
-
+*/
+  /*
   COPImpulseRightFoot_.reset(
 		 new mc_impact::COPInsideContactAreaWithImpulse(solver(), getContact("RightFoot"), *miPredictorPtr) 
 		  ); 
 
-
-  solver().addConstraint(COPImpulseLeftFoot_.get());
-  solver().addConstraint(COPImpulseRightFoot_.get());
-  std::cout << "Zero slippage constraint is added." <<std::endl;
 */
+  //solver().addConstraint(COPImpulseLeftFoot_.get());
+ // solver().addConstraint(COPImpulseRightFoot_.get());
+  //std::cout << "Zero slippage constraint is added." <<std::endl;
+
 
   // Once for all the constriants
   solver().updateConstrSize();
@@ -269,7 +270,7 @@ logger().addLogEntry("test_delta_q_vel_upper-diff-direct", [this]() {
     Eigen::VectorXd result =
         rbd::dofToVector(miPredictorPtr->getRobot().mb(), miPredictorPtr->getRobot().vu())
         - 
-         (miPredictorPtr->getJointVelocityJump("r_sole")
+         (miPredictorPtr->getJointVelocityJump()
          + rbd::dofToVector(robot().mb(), robot().mbc().alpha)
 	 );
 
@@ -277,7 +278,7 @@ logger().addLogEntry("test_delta_q_vel_upper-diff-direct", [this]() {
   });
 logger().addLogEntry("test_delta_q_vel_lower-diff-direct", [this]() {
     Eigen::VectorXd result =
-         (miPredictorPtr->getJointVelocityJump("r_sole")
+         (miPredictorPtr->getJointVelocityJump()
          + rbd::dofToVector(robot().mb(), robot().mbc().alpha)
 	 )
 	- 
@@ -295,7 +296,8 @@ logger().addLogEntry("test_delta_q_vel_upper-diff", [this]() {
         - rbd::dofToVector(robot().mb(), robot().mbc().alpha);
     Eigen::VectorXd middle = miPredictorPtr->getJacobianDeltaAlpha()
                              * rbd::dofToVector(robot().mb(), robot().mbc().alphaD)
-                             * miPredictorPtr->getImpactDuration_();
+			     * timeStep;
+                             //* miPredictorPtr->getImpactDuration_();
     Eigen::VectorXd result = upper - middle;
     return result;
   });
@@ -307,7 +309,8 @@ Eigen::VectorXd lower =
 
         Eigen::VectorXd middle = miPredictorPtr->getJacobianDeltaAlpha()
                              * rbd::dofToVector(robot().mb(), robot().mbc().alphaD)
-                             * miPredictorPtr->getImpactDuration_();
+			     * timeStep;
+                             // * miPredictorPtr->getImpactDuration_();
 Eigen::VectorXd result = middle - lower;
     return result; 
   });
