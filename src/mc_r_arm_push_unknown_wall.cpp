@@ -215,7 +215,7 @@ boundTorqueJump_.reset(new mc_impact::BoundJointTorqueJump(*miPredictorPtr, time
 
   logger().addLogEntry("r_ankle_predict_impact_impulse",
                        [this]() { return miPredictorPtr->getImpulsiveForce("r_sole"); });
-  logger().addLogEntry("q_position", [this]() { return rbd::dofToVector(realRobots().robot().mb(), realRobots().robot().mbc().q); });
+  logger().addLogEntry("q_position", [this]() { return rbd::paramToVector(realRobots().robot().mb(), realRobots().robot().mbc().q); });
 
   logger().addLogEntry("q_vel", [this]() { return rbd::dofToVector(realRobots().robot().mb(), realRobots().robot().mbc().alpha); });
 
