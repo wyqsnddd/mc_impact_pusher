@@ -100,6 +100,7 @@ void DynamicContactState::start(mc_control::fsm::Controller & ctlInput)
 		  return force;
   });
 */
+  run(ctlInput);
 }
 
 bool DynamicContactState::run(mc_control::fsm::Controller & ctlInput)

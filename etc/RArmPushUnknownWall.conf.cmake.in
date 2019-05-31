@@ -157,7 +157,7 @@
       "Final": { "base": "Pause", "placeholderParameter": 0.1 }
     },
     "transitions": [
-        [ "Pause", "OK", "Prepare", "Auto" ],
+        //[ "Pause", "OK", "Prepare", "Auto" ],
         [ "Prepare", "RightHandReady", "Contact", "Auto" ],
         [ "Contact", "OK", "Final", "Auto" ]
     ]

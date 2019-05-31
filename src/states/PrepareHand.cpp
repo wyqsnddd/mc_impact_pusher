@@ -45,7 +45,7 @@ void PrepareHandState::start(mc_control::fsm::Controller & ctlInput)
   sva::PTransformd right_raise_hand(desiredRotation * rTransformZero_.rotation().inverse(), translation_offset);
   rEfTaskPtr_->add_ef_pose(right_raise_hand);
 
-
+  run(ctlInput);
 }
 
 bool PrepareHandState::run(mc_control::fsm::Controller & ctlInput)
