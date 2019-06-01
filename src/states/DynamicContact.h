@@ -5,9 +5,8 @@
 
 #include "BoundJointTorqueJump.h"
 #include "BoundJointVelocityJump.h"
-#include "PositiveContactForceWithImpulse.h"
-#include "COPInsideContactAreaWithImpulse.h" 
-
+#include "COPInsideContactAreaWithImpulse.h"
+#include "ZeroSlippageWithImpulse.h"
 
 struct DynamicContactState : mc_control::fsm::State
 {
@@ -28,8 +27,8 @@ protected:
 
   std::unique_ptr<mc_impact::BoundJointTorqueJump> boundTorqueJump_;
   std::unique_ptr<mc_impact::BoundJointVelocityJump> boundVelocityJump_;
-  std::unique_ptr<mc_impact::PositiveContactForceWithImpulse> positiveContactForceLeftFoot_;
-  std::unique_ptr<mc_impact::PositiveContactForceWithImpulse> positiveContactForceRightFoot_;
+  std::unique_ptr<mc_impact::ZeroSlippageWithImpulse> zeroSlippageLeftFoot_;
+  std::unique_ptr<mc_impact::ZeroSlippageWithImpulse> zeroSlippageRightFoot_;
 
   std::unique_ptr<mc_impact::COPInsideContactAreaWithImpulse> COPImpulseLeftFoot_;
   std::unique_ptr<mc_impact::COPInsideContactAreaWithImpulse> COPImpulseRightFoot_;

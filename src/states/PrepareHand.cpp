@@ -46,13 +46,117 @@ void PrepareHandState::start(mc_control::fsm::Controller & ctlInput)
   rEfTaskPtr_->add_ef_pose(right_raise_hand);
 
   run(ctlInput);
+
+  //--------------------------- CoP constraint:
+  // Suppose the contact area is a 5 by 5 cm area:
+
+  ctl.logger().addLogEntry("l_ankle_CoP_Constraint", [&ctl]() {
+    Eigen::MatrixXd A_cop;
+    A_cop.resize(4, 6);
+    A_cop.setZero();
+
+    A_cop(0, 5) = -0.12;
+    A_cop(0, 1) = -1;
+    A_cop(1, 5) = -0.12;
+    A_cop(1, 1) = 1;
+    A_cop(2, 5) = -0.06;
+    A_cop(2, 0) = 1;
+    A_cop(3, 5) = -0.06;
+    A_cop(3, 0) = -1;
+
+    sva::PTransformd X_0_lSole = ctl.robot().bodyPosW("l_sole");
+    sva::PTransformd X_0_rSole = ctl.robot().bodyPosW("r_sole");
+    sva::PTransformd X_0_ee = ctl.robot().bodyPosW("r_wrist");
+
+    sva::PTransformd X_rSole_lSole = X_0_lSole * X_0_rSole.inv();
+    sva::ForceVecd r_impulse =
+        X_rSole_lSole.dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), ctl.miPredictorPtr->getImpulsiveForce("r_sole")));
+    sva::ForceVecd l_impulse = sva::ForceVecd(Eigen::Vector3d::Zero(), ctl.miPredictorPtr->getImpulsiveForce("l_sole"));
+
+    ctl.miPredictorPtr->getImpulsiveForce("l_sole");
+    sva::PTransformd X_ee_lSole = X_0_lSole * X_0_ee.inv();
+    sva::ForceVecd f_ee =
+        X_ee_lSole.dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), ctl.miPredictorPtr->getImpulsiveForce()));
+
+    auto sensorForce = ctl.robot().forceSensor("LeftFootForceSensor").wrench();
+
+    // auto sensorForce = ctl.solver().desiredContactForce(ctl.getContact("LeftFoot"));
+    Eigen::VectorXd result = A_cop * (sensorForce.vector() + r_impulse.vector() + l_impulse.vector() + f_ee.vector());
+    // Eigen::VectorXd result = A_cop*(sensorForce.vector() );
+
+    return result;
+  });
+
+  ctl.logger().addLogEntry("r_ankle_CoP_Constraint", [&ctl]() {
+    Eigen::MatrixXd A_cop;
+    A_cop.resize(4, 6);
+    A_cop.setZero();
+
+    A_cop(0, 5) = -0.12;
+    A_cop(0, 1) = -1;
+    A_cop(1, 5) = -0.12;
+    A_cop(1, 1) = 1;
+    A_cop(2, 5) = -0.06;
+    A_cop(2, 0) = 1;
+    A_cop(3, 5) = -0.06;
+    A_cop(3, 0) = -1;
+
+    sva::PTransformd X_0_lSole = ctl.robot().bodyPosW("l_sole");
+    sva::PTransformd X_0_rSole = ctl.robot().bodyPosW("r_sole");
+    sva::PTransformd X_0_ee = ctl.robot().bodyPosW("r_wrist");
+
+    sva::PTransformd X_lSole_rSole = X_0_rSole * X_0_lSole.inv();
+
+    sva::ForceVecd l_impulse =
+        X_lSole_rSole.dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), ctl.miPredictorPtr->getImpulsiveForce("l_sole")));
+
+    sva::ForceVecd r_impulse = sva::ForceVecd(Eigen::Vector3d::Zero(), ctl.miPredictorPtr->getImpulsiveForce("r_sole"));
+
+    sva::PTransformd X_ee_rSole = X_0_rSole * X_0_ee.inv();
+    sva::ForceVecd f_ee =
+        X_ee_rSole.dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), ctl.miPredictorPtr->getImpulsiveForce()));
+
+    auto sensorForce = ctl.robot().forceSensor("RightFootForceSensor").wrench();
+
+    // auto sensorForce = ctl.solver().desiredContactForce(ctl.getContact("RightFoot"));
+    Eigen::VectorXd result = A_cop * (sensorForce.vector() + r_impulse.vector() + l_impulse.vector() + f_ee.vector());
+
+    return result;
+  });
+
+  //--------------------------- zero slippage:
+  ctl.logger().addLogEntry("l_ankle_zero_slippage", [&ctl]() {
+    // auto tempContact  = ctl.getContact("LeftFoot");
+    // Eigen::Vector3d normal =
+    // tempContact.X_0_r2s(ctl.solver().robots().robot(tempContact.r2Index())).rotation().row(2).transpose();
+    Eigen::Vector3d normal = Eigen::Vector3d::UnitZ();
+    double mu = mc_rbdyn::Contact::defaultFriction;
+    Eigen::Matrix3d multiplier = (Eigen::MatrixXd::Identity(3, 3) - (1 + mu) * normal * normal.transpose());
+    // Eigen::Vector3d f_qp = ctl.solver().desiredContactForce(ctl.getContact("LeftFoot")).force();
+    Eigen::Vector3d f_qp = (ctl.robot().forceSensor("LeftFootForceSensor").force());
+    Eigen::Vector3d result = multiplier * (f_qp + ctl.miPredictorPtr->getImpulsiveForce("l_sole"));
+    return result;
+  });
+
+  ctl.logger().addLogEntry("r_ankle_zero_slippage", [&ctl]() {
+    // auto & tempContact = ctl.getContact("RightFoot");
+    // Eigen::Vector3d normal =
+    // tempContact.X_0_r2s(ctl.solver().robots().robot(tempContact.r2Index())).rotation().row(2).transpose();
+    Eigen::Vector3d normal = Eigen::Vector3d::UnitZ();
+    double mu = mc_rbdyn::Contact::defaultFriction;
+    Eigen::Matrix3d multiplier = (Eigen::MatrixXd::Identity(3, 3) - (1 + mu) * normal * normal.transpose());
+    // Eigen::Vector3d f_qp = ctl.solver().desiredContactForce(ctl.getContact("RightFoot")).force();
+    Eigen::Vector3d f_qp = (ctl.robot().forceSensor("RightFootForceSensor").force());
+    Eigen::Vector3d result = multiplier * (f_qp + ctl.miPredictorPtr->getImpulsiveForce("r_sole"));
+    return result;
+  });
 }
 
 bool PrepareHandState::run(mc_control::fsm::Controller & ctlInput)
 {
 
   auto & ctl = static_cast<Controller &>(ctlInput);
-  std::cout << "PrepareState: the right ef error is: "<<rEfTaskPtr_->eval().norm() << std::endl;
+  std::cout << "PrepareState: the right ef error is: " << rEfTaskPtr_->eval().norm() << std::endl;
 
   Eigen::Vector3d surfaceNormal;
   surfaceNormal << 1, 0, 0;

@@ -7,7 +7,8 @@
 
 #include "BoundJointTorqueJump.h"
 #include "BoundJointVelocityJump.h"
-#include "COPInsideContactAreaWithImpulse.h" 
+#include "COPInsideContactAreaWithImpulse.h"
+#include "ZeroSlippageWithImpulse.h"
 
 struct Controller : public mc_control::fsm::Controller
 {
@@ -29,12 +30,12 @@ struct Controller : public mc_control::fsm::Controller
   bool rArmInContact();
 
   std::unique_ptr<mi_impactPredictor> miPredictorPtr;
-  
+
   const mc_rbdyn::Contact & getContact(const std::string & s);
+
 private:
   const mc_rbdyn::Robot & realRobot() const;
-  double impactIndicator_; 
-
+  double impactIndicator_;
 
   // mc_rtc::Configuration state_conf_;
 };
