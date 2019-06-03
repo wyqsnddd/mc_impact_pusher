@@ -117,23 +117,6 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
 
   //----------------------------------- Add additional constraints
   // ---------------------------- constructor: add modified constraints
-
-  std::cout << "About to create new constriants" << std::endl;
-  boundTorqueJump_.reset(new mc_impact::BoundJointTorqueJump(*miPredictorPtr, timeStep, timeStep, 3.5));
-  solver().addConstraint(boundTorqueJump_.get());
-
-  // state_conf_.load(config);
-
-    boundVelocityJump_.reset(new mc_impact::BoundJointVelocityJump(*miPredictorPtr, timeStep));
-    std::cout << "bound velocity jump constraint is created" << std::endl;
-    solver().addConstraint(boundVelocityJump_.get());
-    std::cout << "bound velocity jump constraint is added" << std::endl;
-
-  // std::cout << "Zero slippage constraint is added." <<std::endl;
-
-  // Once for all the constriants
-  solver().updateConstrSize();
-
   logger().addLogEntry("ee_Vel_impact_jump", [this]() {
     // Eigen::VectorXd eeVelJump =
     return miPredictorPtr->getEeVelocityJump();
@@ -448,9 +431,9 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
     sva::PTransformd X_ee_CoM = X_0_CoM * X_0_ee.inv();
 
     sva::ForceVecd F_ee = miPredictorPtr->getImpulsiveForceCOM();
-	    /*
-    sva::ForceVecd F_ee =
-        X_ee_CoM.dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), miPredictorPtr->getImpulsiveForce()));
+    /*
+  sva::ForceVecd F_ee =
+      X_ee_CoM.dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), miPredictorPtr->getImpulsiveForce()));
 */
     // sva::ForceVecd f_ee = miPredictorPtr->getImpulsiveForceCOM();
 
@@ -616,18 +599,33 @@ bool Controller::run()
   bool r = mc_control::fsm::Controller::run();
   if(iter_++ == 0)
   {
-    zeroSlippageLeftFoot_.reset(new mc_impact::ZeroSlippageWithImpulse(solver(), getContact("LeftFoot"), *miPredictorPtr, "l_sole"));
+
+    // std::cout << "About to create new constriants" << std::endl;
+    boundTorqueJump_.reset(new mc_impact::BoundJointTorqueJump(*miPredictorPtr, timeStep, timeStep, 3.5));
+    solver().addConstraint(boundTorqueJump_.get());
+
+    boundVelocityJump_.reset(new mc_impact::BoundJointVelocityJump(*miPredictorPtr, timeStep));
+    // std::cout << "bound velocity jump constraint is created" << std::endl;
+    solver().addConstraint(boundVelocityJump_.get());
+    // std::cout << "bound velocity jump constraint is added" << std::endl;
+
+    // Once for all the constriants
+    // solver().updateConstrSize();
+    zeroSlippageLeftFoot_.reset(
+        new mc_impact::ZeroSlippageWithImpulse(solver(), getContact("LeftFoot"), *miPredictorPtr, "l_sole"));
     solver().addConstraint(zeroSlippageLeftFoot_.get());
 
-    zeroSlippageRightFoot_.reset(new mc_impact::ZeroSlippageWithImpulse(solver(), getContact("RightFoot"), *miPredictorPtr, "r_sole"));
+    zeroSlippageRightFoot_.reset(
+        new mc_impact::ZeroSlippageWithImpulse(solver(), getContact("RightFoot"), *miPredictorPtr, "r_sole"));
     solver().addConstraint(zeroSlippageRightFoot_.get());
 
-    COPImpulseLeftFoot_.reset(new mc_impact::COPInsideContactAreaWithImpulse(solver(), getContact("LeftFoot"), {-0.12, 0.12, -0.06, 0.06}, *miPredictorPtr, "l_sole"));
-     solver().addConstraint(COPImpulseLeftFoot_.get());
+    COPImpulseLeftFoot_.reset(new mc_impact::COPInsideContactAreaWithImpulse(
+        solver(), getContact("LeftFoot"), {-0.12, 0.12, -0.06, 0.06}, *miPredictorPtr, "l_sole"));
+    solver().addConstraint(COPImpulseLeftFoot_.get());
 
-
-    COPImpulseRightFoot_.reset(new mc_impact::COPInsideContactAreaWithImpulse(solver(), getContact("RightFoot"), {-0.12, 0.12, -0.06, 0.06}, *miPredictorPtr, "r_sole"));
-     solver().addConstraint(COPImpulseRightFoot_.get());
+    COPImpulseRightFoot_.reset(new mc_impact::COPInsideContactAreaWithImpulse(
+        solver(), getContact("RightFoot"), {-0.12, 0.12, -0.06, 0.06}, *miPredictorPtr, "r_sole"));
+    solver().addConstraint(COPImpulseRightFoot_.get());
 
     solver().updateConstrSize();
   }
