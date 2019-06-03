@@ -645,9 +645,9 @@ bool Controller::run()
   bool r = mc_control::fsm::Controller::run();
   if(iter_++ == 0)
   {
-    zeroSlippageLeftFoot_.reset(new mc_impact::ZeroSlippageWithImpulse(solver(), getContact("LeftFoot"), *miPredictorPtr));
+    zeroSlippageLeftFoot_.reset(new mc_impact::ZeroSlippageWithImpulse(solver(), getContact("LeftFoot"), *miPredictorPtr, "l_sole"));
     solver().addConstraint(zeroSlippageLeftFoot_.get());
-    zeroSlippageRightFoot_.reset(new mc_impact::ZeroSlippageWithImpulse(solver(), getContact("RightFoot"), *miPredictorPtr));
+    zeroSlippageRightFoot_.reset(new mc_impact::ZeroSlippageWithImpulse(solver(), getContact("RightFoot"), *miPredictorPtr, "r_sole"));
     solver().addConstraint(zeroSlippageRightFoot_.get());
 
     solver().updateConstrSize();
