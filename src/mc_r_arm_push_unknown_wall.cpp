@@ -129,35 +129,6 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
     solver().addConstraint(boundVelocityJump_.get());
     std::cout << "bound velocity jump constraint is added" << std::endl;
 
-  // ------------------------------------ Positive contact force
-  /*
-  positiveContactForceLeftFoot_.reset(
-      new mc_impact::PositiveContactForceWithImpulse(solver(), getContact("LeftFoot"), *miPredictorPtr));
-
-  positiveContactForceRightFoot_.reset(
-      new mc_impact::PositiveContactForceWithImpulse(solver(), getContact("RightFoot"), *miPredictorPtr));
-
-  std::cout << "Positive contact force constraint is created" << std::endl;
-
-  solver().addConstraint(positiveContactForceLeftFoot_.get());
-  solver().addConstraint(positiveContactForceRightFoot_.get());
-
-  std::cout << "Positive contact force constraint is added" << std::endl;
-  */
-  // ------------------------------------ Zero slippage
-  /*
-    COPImpulseLeftFoot_.reset(
-       new mc_impact::COPInsideContactAreaWithImpulse(solver(), getContact("LeftFoot"), *miPredictorPtr)
-        );
-  */
-  /*
-  COPImpulseRightFoot_.reset(
-     new mc_impact::COPInsideContactAreaWithImpulse(solver(), getContact("RightFoot"), *miPredictorPtr)
-      );
-
-*/
-  // solver().addConstraint(COPImpulseLeftFoot_.get());
-  // solver().addConstraint(COPImpulseRightFoot_.get());
   // std::cout << "Zero slippage constraint is added." <<std::endl;
 
   // Once for all the constriants
@@ -647,8 +618,16 @@ bool Controller::run()
   {
     zeroSlippageLeftFoot_.reset(new mc_impact::ZeroSlippageWithImpulse(solver(), getContact("LeftFoot"), *miPredictorPtr, "l_sole"));
     solver().addConstraint(zeroSlippageLeftFoot_.get());
+
     zeroSlippageRightFoot_.reset(new mc_impact::ZeroSlippageWithImpulse(solver(), getContact("RightFoot"), *miPredictorPtr, "r_sole"));
     solver().addConstraint(zeroSlippageRightFoot_.get());
+
+    COPImpulseLeftFoot_.reset(new mc_impact::COPInsideContactAreaWithImpulse(solver(), getContact("LeftFoot"), {-0.12, 0.12, -0.06, 0.06}, *miPredictorPtr, "l_sole"));
+     solver().addConstraint(COPImpulseLeftFoot_.get());
+
+
+    COPImpulseRightFoot_.reset(new mc_impact::COPInsideContactAreaWithImpulse(solver(), getContact("RightFoot"), {-0.12, 0.12, -0.06, 0.06}, *miPredictorPtr, "r_sole"));
+     solver().addConstraint(COPImpulseRightFoot_.get());
 
     solver().updateConstrSize();
   }
