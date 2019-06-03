@@ -16,9 +16,13 @@ struct Controller : public mc_control::fsm::Controller
 
   void reset(const mc_control::ControllerResetData & data) override;
 
+  bool run() override;
+
   std::shared_ptr<mc_tasks::MetaTask> comTaskPtr;
   std::unique_ptr<mc_impact::BoundJointTorqueJump> boundTorqueJump_;
   std::unique_ptr<mc_impact::BoundJointVelocityJump> boundVelocityJump_;
+  std::unique_ptr<mc_impact::ZeroSlippageWithImpulse> zeroSlippageLeftFoot_;
+  std::unique_ptr<mc_impact::ZeroSlippageWithImpulse> zeroSlippageRightFoot_;
   std::unique_ptr<mc_impact::COPInsideContactAreaWithImpulse> COPImpulseLeftFoot_;
   std::unique_ptr<mc_impact::COPInsideContactAreaWithImpulse> COPImpulseRightFoot_;
 
@@ -37,5 +41,6 @@ private:
   const mc_rbdyn::Robot & realRobot() const;
   double impactIndicator_;
 
+  size_t iter_ = 0;
   // mc_rtc::Configuration state_conf_;
 };

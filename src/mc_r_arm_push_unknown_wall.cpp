@@ -640,6 +640,21 @@ bool Controller::rArmInContact()
     return false;
 }
 
+bool Controller::run()
+{
+  bool r = mc_control::fsm::Controller::run();
+  if(iter_++ == 0)
+  {
+    zeroSlippageLeftFoot_.reset(new mc_impact::ZeroSlippageWithImpulse(solver(), getContact("LeftFoot"), *miPredictorPtr));
+    solver().addConstraint(zeroSlippageLeftFoot_.get());
+    zeroSlippageRightFoot_.reset(new mc_impact::ZeroSlippageWithImpulse(solver(), getContact("RightFoot"), *miPredictorPtr));
+    solver().addConstraint(zeroSlippageRightFoot_.get());
+
+    solver().updateConstrSize();
+  }
+  return r;
+}
+
 void Controller::reset(const mc_control::ControllerResetData & data)
 {
 
