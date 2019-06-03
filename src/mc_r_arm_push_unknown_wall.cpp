@@ -123,12 +123,12 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
   solver().addConstraint(boundTorqueJump_.get());
 
   // state_conf_.load(config);
-  /*
+
     boundVelocityJump_.reset(new mc_impact::BoundJointVelocityJump(*miPredictorPtr, timeStep));
     std::cout << "bound velocity jump constraint is created" << std::endl;
     solver().addConstraint(boundVelocityJump_.get());
     std::cout << "bound velocity jump constraint is added" << std::endl;
-  */
+
   // ------------------------------------ Positive contact force
   /*
   positiveContactForceLeftFoot_.reset(
