@@ -125,6 +125,48 @@ void PrepareHandState::start(mc_control::fsm::Controller & ctlInput)
   });
 
   //--------------------------- zero slippage:
+  //  
+
+
+  ctl.logger().addLogEntry("r_ankle_tangential_force", [&ctl]() {
+
+    Eigen::Vector3d normal = Eigen::Vector3d::UnitZ();
+    Eigen::Matrix3d nullProjector = Eigen::MatrixXd::Identity(3, 3) - normal * normal.transpose();
+    
+    Eigen::Vector3d f_qp = ctl.solver().desiredContactForce(ctl.getContact("RightFoot")).force();
+    return  (nullProjector*f_qp).norm();
+    });
+  ctl.logger().addLogEntry("r_ankle_tangential_max_friction", [&ctl]() {
+
+    Eigen::Vector3d normal = Eigen::Vector3d::UnitZ();
+    Eigen::Matrix3d projector = normal * normal.transpose();
+    double mu = mc_rbdyn::Contact::defaultFriction;
+
+    Eigen::Vector3d f_qp = ctl.solver().desiredContactForce(ctl.getContact("RightFoot")).force();
+    return  (projector*f_qp*mu).norm();
+    });
+
+  ctl.logger().addLogEntry("l_ankle_tangential_force", [&ctl]() {
+
+    Eigen::Vector3d normal = Eigen::Vector3d::UnitZ();
+    Eigen::Matrix3d nullProjector = Eigen::MatrixXd::Identity(3, 3) - normal * normal.transpose();
+    
+    Eigen::Vector3d f_qp = ctl.solver().desiredContactForce(ctl.getContact("LeftFoot")).force();
+    return  (nullProjector*f_qp).norm();
+    });
+  ctl.logger().addLogEntry("l_ankle_tangential_max_friction", [&ctl]() {
+
+    Eigen::Vector3d normal = Eigen::Vector3d::UnitZ();
+    Eigen::Matrix3d projector = normal * normal.transpose();
+    double mu = mc_rbdyn::Contact::defaultFriction;
+
+    Eigen::Vector3d f_qp = ctl.solver().desiredContactForce(ctl.getContact("LeftFoot")).force();
+    return  (projector*f_qp*mu).norm();
+    });
+
+
+
+
   ctl.logger().addLogEntry("l_ankle_zero_slippage", [&ctl]() {
     // auto tempContact  = ctl.getContact("LeftFoot");
     // Eigen::Vector3d normal =

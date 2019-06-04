@@ -125,8 +125,27 @@
             "weight": 100.0
         },
         "leftEfTask": {"bodyName" : "l_wrist", "stiffness" : 20.0, "weight" : 1000.0, "bound" : 0.1 },
-        "rightEfTask": {"bodyName" : "r_wrist", "stiffness" : 10.0, "weight" : 300.0, "bound" : 0.1 },
+        "rightEfTask": {"bodyName" : "r_wrist", "stiffness" : 5.0, "weight" : 300.0, "bound" : 0.1 },
 	"rightEfTaskDynamic": {"bodyName" : "r_wrist", "stiffness" : 10.0, "weight" : 300.0, "bound" : 0.1 },
+    },
+    "impact":{
+      "constraints": {
+         "jointVelocity": false,
+	 "jointTorque": false,
+	 "CoPLeft": true,
+	 "CoPRight": true,
+	 "SlippageLeft": false,
+	 "SlippageRight": false,
+	 "ZMP": true
+	 },
+    "estimation":{
+	"coeFrictionDeduction": 0.2,
+	"coeRestitution": 0.8,
+	"delta_dt": 0.005,
+	"useLinearJacobian": true,
+	"impactBodyName": "r_wrist",
+	"end-effectors": [ "l_sole", "r_sole", "l_wrist", "r_wrist"]
+         }
     },
     "states": {
       "Prepare":
@@ -138,21 +157,11 @@
       "Contact":
       {
         "base": "DynamicContact", // C++ state
-        "contactVelocity" : [0.5, 0.0, 0.0], //
+        "contactVelocity" : [0.15, 0.0, 0.0], //
         "pushDepth":  [1.0, 0.0, 0.0], // Target position that should generate the impact 
         // Velocity control for the end-effector
         "rightEfStiffness": 0.0,
         "rightEfDamping": 300.0,
-	"coeRestitution": 0.8,
-	"coeFrictionDeduction2": 0.15,
-	"coeFrictionDeduction": 0.2,
-	"delta_dt": 0.005,
-	"useLinearJacobian": true,
-	"impactBodyName": "r_wrist",
-	"end-effectors2": ["l_ankle", "r_ankle", "l_wrist", "r_wrist"],
-	"end-effectors1": [ "l_sole", "r_sole", "body", "torso","r_wrist"],
-	"end-effectors0": [ "l_sole", "r_sole", "l_wrist","r_wrist"],
-	"end-effectors": [ "l_sole", "r_sole", "l_wrist", "r_wrist"]
       },
       "Final": { "base": "Pause", "placeholderParameter": 0.1 }
     },
