@@ -123,8 +123,12 @@ bool DynamicContactState::run(mc_control::fsm::Controller & ctlInput)
     // Output the transition signal such that we can move on according to the transitions
 
     output("ImpactDetected");
+    std::cout<<"---------------Impact Detected--------------"<<std::endl;
     // output("OK");
     ctl.solver().removeTask(rPosTaskPtr_);
+    std::cout<<"---------------End-effector task removed--------------"<<std::endl;
+    //ctl.solver().removeConstraint(ctl.copImpulseLeftFoot_);
+    //ctl.solver().removeConstraint(ctl.copImpulseRightFoot_);
     return true;
   }
 

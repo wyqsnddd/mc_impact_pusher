@@ -1,10 +1,4 @@
 {
-    // Specific settings for the controller
-    // Initial position of the box center (x/y/z)
-    //"box_init": [0.35, 0, 0.9408],
-    //"boxEfTask": {"bodyName" : "box", "errorBound": 0.5, "stiffness" : 5.0, "weight" : 10000.0, "liftBoxOffset" : [0.0, 0.0, 0.3] },
-    //"BoxPostureTask" : {"weight": 100, "stiffness" : 1.0 },
-    // Intermediate target for spline
     "contact_targets":
     {
       // x/y relative to Left surface, z penetration depth (< 0)
@@ -125,22 +119,24 @@
             "weight": 100.0
         },
         "leftEfTask": {"bodyName" : "l_wrist", "stiffness" : 20.0, "weight" : 1000.0, "bound" : 0.1 },
-        "rightEfTask": {"bodyName" : "r_wrist", "stiffness" : 5.0, "weight" : 300.0, "bound" : 0.1 },
-	"rightEfTaskDynamic": {"bodyName" : "r_wrist", "stiffness" : 10.0, "weight" : 300.0, "bound" : 0.1 },
+        "rightEfTask": {"bodyName" : "r_wrist", "stiffness" : 5.0, "weight" : 200.0, "bound" : 0.1 },
+	"rightEfTaskDynamic": {"bodyName" : "r_wrist", "stiffness" : 5.0, "weight" : 200.0, "bound" : 0.1 },
     },
     "impact":{
       "constraints": {
          "jointVelocity": false,
-	 "jointTorque": false,
-	 "CoPLeft": true,
-	 "CoPRight": true,
+	 "jointTorque": true,
+	 "CoPLeft": false,
+	 "CoPRight": false,
 	 "SlippageLeft": false,
 	 "SlippageRight": false,
+	 "frictionWithImpulse": true,
+	 "copWithImpulse": true,
 	 "ZMP": true
 	 },
     "estimation":{
 	"coeFrictionDeduction": 0.2,
-	"coeRestitution": 0.8,
+	"coeRestitution": 0.9,
 	"delta_dt": 0.005,
 	"useLinearJacobian": true,
 	"impactBodyName": "r_wrist",
@@ -157,7 +153,7 @@
       "Contact":
       {
         "base": "DynamicContact", // C++ state
-        "contactVelocity" : [0.15, 0.0, 0.0], //
+        "contactVelocity" : [0.4, 0.0, 0.0], //
         "pushDepth":  [1.0, 0.0, 0.0], // Target position that should generate the impact 
         // Velocity control for the end-effector
         "rightEfStiffness": 0.0,

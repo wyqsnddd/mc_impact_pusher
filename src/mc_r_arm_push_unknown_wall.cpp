@@ -110,29 +110,23 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
     // Eigen::VectorXd eeVelJump =
     return miPredictorPtr->getEeVelocityJump();
   });
-  logger().addLogEntry("test_delta_tau_ee", [this]() {
-    auto jacPtr = std::unique_ptr<rbd::Jacobian>(new rbd::Jacobian(robot().mb(), "r_wrist"));
-    auto jac = jacPtr->bodyJacobian(robot().mb(), robot().mbc());
-    Eigen::VectorXd result =
-        jac.block(3, 0, 3, jac.cols()).transpose() * robot().forceSensor("RightHandForceSensor").force();
-    return result;
-  });
+  //------------------------------ Test Jacobian_delta_f
+  logger().addLogEntry("test_left_Jacobian_f", [this]() {
+    Eigen::VectorXd temp =
+        (rbd::dofToVector(robot().mb(), robot().mbc().alpha)
+         + rbd::dofToVector(robot().mb(), robot().mbc().alphaD) * miPredictorPtr->getImpactDuration_());
+	Eigen::Vector3d delta_f =  ((1 / miPredictorPtr->getImpactDuration_()) * miPredictorPtr->getJacobianDeltaF("l_sole") * temp);
 
-  logger().addLogEntry("test_delta_tau_r_sole", [this]() {
-    auto jacPtr = std::unique_ptr<rbd::Jacobian>(new rbd::Jacobian(robot().mb(), "r_sole"));
-    auto jac = jacPtr->bodyJacobian(robot().mb(), robot().mbc());
-    Eigen::VectorXd result =
-        jac.block(3, 0, 3, jac.cols()).transpose() * robot().forceSensor("RightFootForceSensor").force();
-    return result;
-  });
+    return  delta_f; });
+  logger().addLogEntry("test_right_Jacobian_f", [this]() {
+    Eigen::VectorXd temp =
+        (rbd::dofToVector(robot().mb(), robot().mbc().alpha)
+         + rbd::dofToVector(robot().mb(), robot().mbc().alphaD) * miPredictorPtr->getImpactDuration_());
+	Eigen::Vector3d delta_f =  ((1 / miPredictorPtr->getImpactDuration_()) * miPredictorPtr->getJacobianDeltaF("r_sole") * temp);
 
-  logger().addLogEntry("test_delta_tau_l_sole", [this]() {
-    auto jacPtr = std::unique_ptr<rbd::Jacobian>(new rbd::Jacobian(robot().mb(), "l_sole"));
-    auto jac = jacPtr->bodyJacobian(robot().mb(), robot().mbc());
-    Eigen::VectorXd result =
-        jac.block(3, 0, 3, jac.cols()).transpose() * robot().forceSensor("LeftFootForceSensor").force();
-    return result;
-  });
+    return  delta_f; });
+
+
   // ---------------------------- constructor: add modified constraints
   logger().addLogEntry("ee_Vel_impact_jump", [this]() {
     // Eigen::VectorXd eeVelJump =
@@ -197,13 +191,6 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
   logger().addLogEntry("delta_tau", [this]() { return miPredictorPtr->getTauJump(); });
 
   logger().addLogEntry("test_delta_tau_norm", [this]() { return miPredictorPtr->getTauJump().norm(); });
-
-  logger().addLogEntry("test_delta_tau_impact_norm",
-                       [this]() { return miPredictorPtr->getBranchTauJump("r_wrist").norm(); });
-  logger().addLogEntry("test_delta_tau_l_sole_norm",
-                       [this]() { return miPredictorPtr->getBranchTauJump("l_sole").norm(); });
-  logger().addLogEntry("test_delta_tau_r_sole_norm",
-                       [this]() { return miPredictorPtr->getBranchTauJump("r_sole").norm(); });
 
   logger().addLogEntry("test_delta_tau_jacobian", [this]() {
     Eigen::VectorXd temp =
@@ -301,6 +288,28 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
     auto & robot = this->realRobots().robot();
     return robot.cop("RightFoot");
     });
+  logger().addLogEntry("CoP_LeftFoot_impulse_jump_local_new", [this]() {
+    Eigen::Vector3d impulse = miPredictorPtr->getImpulsiveForce("l_sole");
+    sva::ForceVecd wrench = robot().forceSensor("LeftFootForceSensor").wrench();
+    double denominator = (impulse.z() + wrench.force().z())*wrench.force().z();
+
+    Eigen::Vector3d tempZMP;
+    tempZMP.x() = (impulse.z()*wrench.moment().y()) / denominator;
+    tempZMP.y() = -(impulse.x()*wrench.moment().x()) / denominator;
+    tempZMP.z() = 0;
+    return tempZMP;
+  });
+  logger().addLogEntry("CoP_RightFoot_impulse_jump_local_new", [this]() {
+    Eigen::Vector3d impulse = miPredictorPtr->getImpulsiveForce("r_sole");
+    sva::ForceVecd wrench = robot().forceSensor("RightFootForceSensor").wrench();
+    double denominator = (impulse.z() + wrench.force().z())*wrench.force().z();
+
+    Eigen::Vector3d tempZMP;
+    tempZMP.x() = (impulse.z()*wrench.moment().y()) / denominator;
+    tempZMP.y() = -(impulse.x()*wrench.moment().x()) / denominator;
+    tempZMP.z() = 0;
+    return tempZMP;
+  });
 
 
   logger().addLogEntry("CoP_LeftFoot_impulse_jump_local", [this]() {
@@ -642,6 +651,46 @@ bool Controller::run()
   {
 
   forceThreshold = config()("contact_detection")("ForceThreshold");
+  if (config()("impact")("constraints")("copWithImpulse")){
+   copImpulseRightFoot_.reset(new mc_impact::copWithImpulse(
+			    *miPredictorPtr, 
+			   "r_sole",
+			   "RightFootForceSensor",
+			    timeStep, timeStep,
+			    {-0.10, 0.10, -0.05, 0.05}
+			    ));
+    solver().addConstraint(copImpulseRightFoot_.get());
+    
+    copImpulseLeftFoot_.reset(new mc_impact::copWithImpulse(
+			    *miPredictorPtr, 
+			    "l_sole",
+			    "LeftFootForceSensor",
+			    timeStep, timeStep,
+			    {-0.10, 0.10, -0.05, 0.05}
+			    ));
+    solver().addConstraint(copImpulseLeftFoot_.get());
+    
+      }
+  if (config()("impact")("constraints")("frictionWithImpulse")){
+   frictionImpulseLeftFoot_.reset(new mc_impact::frictionWithImpulse(
+			    *miPredictorPtr, 
+			   "l_sole",
+			   "LeftFootForceSensor",
+			   getContact("LeftFoot"),
+			    timeStep, timeStep));
+    solver().addConstraint(frictionImpulseLeftFoot_.get());
+
+    frictionImpulseRightFoot_.reset(new mc_impact::frictionWithImpulse(
+			    *miPredictorPtr, 
+			   "r_sole",
+			   "RightFootForceSensor",
+			   getContact("RightFoot"),
+			    timeStep, timeStep));
+    solver().addConstraint(frictionImpulseRightFoot_.get());
+  }
+
+
+  forceThreshold = config()("contact_detection")("ForceThreshold");
   if (config()("impact")("constraints")("jointTorque")){
     boundTorqueJump_.reset(new mc_impact::BoundJointTorqueJump(*miPredictorPtr, timeStep, timeStep, 3.5));
     solver().addConstraint(boundTorqueJump_.get());
@@ -665,13 +714,13 @@ bool Controller::run()
  
   if (config()("impact")("constraints")("CoPLeft")){
     COPImpulseLeftFoot_.reset(new mc_impact::COPInsideContactAreaWithImpulse(
-        solver(), getContact("LeftFoot"), {-0.12, 0.12, -0.06, 0.06}, *miPredictorPtr, "l_sole"));
+        solver(), getContact("LeftFoot"), {-0.10, 0.10, -0.05, 0.05}, *miPredictorPtr, "l_sole"));
     solver().addConstraint(COPImpulseLeftFoot_.get());
   }
 
   if (config()("impact")("constraints")("CoPRight")){
     COPImpulseRightFoot_.reset(new mc_impact::COPInsideContactAreaWithImpulse(
-        solver(), getContact("RightFoot"), {-0.12, 0.12, -0.06, 0.06}, *miPredictorPtr, "r_sole"));
+        solver(), getContact("RightFoot"), {-0.10, 0.10, -0.05, 0.05}, *miPredictorPtr, "r_sole"));
     solver().addConstraint(COPImpulseRightFoot_.get());
   }
     solver().updateConstrSize();

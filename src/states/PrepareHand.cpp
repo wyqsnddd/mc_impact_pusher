@@ -50,18 +50,56 @@ void PrepareHandState::start(mc_control::fsm::Controller & ctlInput)
   //--------------------------- CoP constraint:
   // Suppose the contact area is a 5 by 5 cm area:
 
+  ctl.logger().addLogEntry("l_ankle_CoP_Constraint_sensor", [&ctl]() {
+    Eigen::MatrixXd A_cop;
+    A_cop.resize(4, 6);
+    A_cop.setZero();
+
+    A_cop(0, 5) = -0.10;
+    A_cop(0, 1) = -1;
+    A_cop(1, 5) = -0.10;
+    A_cop(1, 1) = 1;
+    A_cop(2, 5) = -0.05;
+    A_cop(2, 0) = 1;
+    A_cop(3, 5) = -0.05;
+    A_cop(3, 0) = -1;
+
+    auto sensorForce = ctl.robot().forceSensor("LeftFootForceSensor").wrench();
+    //auto sensorForce = ctl.solver().desiredContactForce(ctl.getContact("LeftFoot"));
+    Eigen::VectorXd result = A_cop*(sensorForce.vector() );
+    return result;
+    });
+  ctl.logger().addLogEntry("r_ankle_CoP_Constraint_sensor", [&ctl]() {
+    Eigen::MatrixXd A_cop;
+    A_cop.resize(4, 6);
+    A_cop.setZero();
+
+    A_cop(0, 5) = -0.10;
+    A_cop(0, 1) = -1;
+    A_cop(1, 5) = -0.10;
+    A_cop(1, 1) = 1;
+    A_cop(2, 5) = -0.05;
+    A_cop(2, 0) = 1;
+    A_cop(3, 5) = -0.05;
+    A_cop(3, 0) = -1;
+
+    auto sensorForce = ctl.robot().forceSensor("RightFootForceSensor").wrench();
+    //auto sensorForce = ctl.solver().desiredContactForce(ctl.getContact("RightFoot"));
+    Eigen::VectorXd result = A_cop*(sensorForce.vector() );
+    return result;
+    });
   ctl.logger().addLogEntry("l_ankle_CoP_Constraint", [&ctl]() {
     Eigen::MatrixXd A_cop;
     A_cop.resize(4, 6);
     A_cop.setZero();
 
-    A_cop(0, 5) = -0.12;
+    A_cop(0, 5) = -0.10;
     A_cop(0, 1) = -1;
-    A_cop(1, 5) = -0.12;
+    A_cop(1, 5) = -0.10;
     A_cop(1, 1) = 1;
-    A_cop(2, 5) = -0.06;
+    A_cop(2, 5) = -0.05;
     A_cop(2, 0) = 1;
-    A_cop(3, 5) = -0.06;
+    A_cop(3, 5) = -0.05;
     A_cop(3, 0) = -1;
 
     sva::PTransformd X_0_lSole = ctl.robot().bodyPosW("l_sole");
@@ -78,11 +116,11 @@ void PrepareHandState::start(mc_control::fsm::Controller & ctlInput)
     sva::ForceVecd f_ee =
         X_ee_lSole.dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), ctl.miPredictorPtr->getImpulsiveForce()));
 
-    // auto sensorForce = ctl.robot().forceSensor("LeftFootForceSensor").wrench();
+    auto sensorForce = ctl.robot().forceSensor("LeftFootForceSensor").wrench();
 
-    auto sensorForce = ctl.solver().desiredContactForce(ctl.getContact("LeftFoot"));
-    Eigen::VectorXd result = A_cop * (sensorForce.vector() + r_impulse.vector() + l_impulse.vector() + f_ee.vector());
-    // Eigen::VectorXd result = A_cop*(sensorForce.vector() );
+    //auto sensorForce = ctl.solver().desiredContactForce(ctl.getContact("LeftFoot"));
+    //Eigen::VectorXd result = A_cop * (sensorForce.vector() + r_impulse.vector() + l_impulse.vector() + f_ee.vector());
+    Eigen::VectorXd result = A_cop*(sensorForce.vector() + l_impulse.vector() );
 
     return result;
   });
@@ -92,13 +130,13 @@ void PrepareHandState::start(mc_control::fsm::Controller & ctlInput)
     A_cop.resize(4, 6);
     A_cop.setZero();
 
-    A_cop(0, 5) = -0.12;
+    A_cop(0, 5) = -0.10;
     A_cop(0, 1) = -1;
-    A_cop(1, 5) = -0.12;
+    A_cop(1, 5) = -0.10;
     A_cop(1, 1) = 1;
-    A_cop(2, 5) = -0.06;
+    A_cop(2, 5) = -0.05;
     A_cop(2, 0) = 1;
-    A_cop(3, 5) = -0.06;
+    A_cop(3, 5) = -0.05;
     A_cop(3, 0) = -1;
 
     sva::PTransformd X_0_lSole = ctl.robot().bodyPosW("l_sole");
@@ -116,15 +154,16 @@ void PrepareHandState::start(mc_control::fsm::Controller & ctlInput)
     sva::ForceVecd f_ee =
         X_ee_rSole.dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), ctl.miPredictorPtr->getImpulsiveForce()));
 
-    // auto sensorForce = ctl.robot().forceSensor("RightFootForceSensor").wrench();
+    auto sensorForce = ctl.robot().forceSensor("RightFootForceSensor").wrench();
 
-    auto sensorForce = ctl.solver().desiredContactForce(ctl.getContact("RightFoot"));
-    Eigen::VectorXd result = A_cop * (sensorForce.vector() + r_impulse.vector() + l_impulse.vector() + f_ee.vector());
+    //auto sensorForce = ctl.solver().desiredContactForce(ctl.getContact("RightFoot"));
+    //Eigen::VectorXd result = A_cop * (sensorForce.vector() + r_impulse.vector() + l_impulse.vector() + f_ee.vector());
+    Eigen::VectorXd result = A_cop * (sensorForce.vector() + r_impulse.vector() );
 
     return result;
   });
 
-  //--------------------------- zero slippage:
+  //-------------------------- zero slippage:
   //  
 
 
@@ -166,7 +205,20 @@ void PrepareHandState::start(mc_control::fsm::Controller & ctlInput)
 
 
 
+  ctl.logger().addLogEntry("l_ankle_zero_slippage_sensor", [&ctl]() {
 
+    double mu = mc_rbdyn::Contact::defaultFriction;
+    Eigen::MatrixXd multiplier_;
+    multiplier_.resize(2, 3);
+    multiplier_.setZero();
+    multiplier_(0, 0) = 1.0;
+    multiplier_(0, 2) = - mu; 
+    multiplier_(1,1) = 1.0;
+    multiplier_(1, 2) = - mu; 
+    Eigen::Vector3d f_qp = (ctl.robot().forceSensor("LeftFootForceSensor").force());
+    Eigen::Vector2d result = multiplier_ * f_qp;
+    return result;
+    });
   ctl.logger().addLogEntry("l_ankle_zero_slippage", [&ctl]() {
     // auto tempContact  = ctl.getContact("LeftFoot");
     // Eigen::Vector3d normal =
@@ -174,11 +226,37 @@ void PrepareHandState::start(mc_control::fsm::Controller & ctlInput)
     Eigen::Vector3d normal = Eigen::Vector3d::UnitZ();
     double mu = mc_rbdyn::Contact::defaultFriction;
     Eigen::Matrix3d multiplier = (Eigen::MatrixXd::Identity(3, 3) - (1 + mu) * normal * normal.transpose());
-    Eigen::Vector3d f_qp = ctl.solver().desiredContactForce(ctl.getContact("LeftFoot")).force();
-    // Eigen::Vector3d f_qp = (ctl.robot().forceSensor("LeftFootForceSensor").force());
-    Eigen::Vector3d result = multiplier * (f_qp + ctl.miPredictorPtr->getImpulsiveForce("l_sole"));
+    //Eigen::Vector3d f_qp = ctl.solver().desiredContactForce(ctl.getContact("LeftFoot")).force();
+     Eigen::Vector3d f_qp = (ctl.robot().forceSensor("LeftFootForceSensor").force());
+    //Eigen::Vector3d result = multiplier * (f_qp + ctl.miPredictorPtr->getImpulsiveForce("l_sole"));
+    //Eigen::Vector3d result = multiplier * (f_qp);
+    //return result;
+    Eigen::MatrixXd multiplier_;
+    multiplier_.resize(2, 3);
+    multiplier_.setZero();
+    multiplier_(0, 0) = 1.0;
+    multiplier_(0, 2) = - mu; 
+    multiplier_(1,1) = 1.0;
+    multiplier_(1, 2) = - mu; 
+
+
+    Eigen::Vector2d result = multiplier_ * (f_qp - ctl.miPredictorPtr->getImpulsiveForce("l_sole"));
     return result;
   });
+  ctl.logger().addLogEntry("r_ankle_zero_slippage_sensor", [&ctl]() {
+
+    double mu = mc_rbdyn::Contact::defaultFriction;
+    Eigen::MatrixXd multiplier_;
+    multiplier_.resize(2, 3);
+    multiplier_.setZero();
+    multiplier_(0, 0) = 1.0;
+    multiplier_(0, 2) = - mu; 
+    multiplier_(1,1) = 1.0;
+    multiplier_(1, 2) = - mu; 
+    Eigen::Vector3d f_qp = (ctl.robot().forceSensor("RightFootForceSensor").force());
+    Eigen::Vector2d result = multiplier_ * f_qp;
+    return result;
+    });
 
   ctl.logger().addLogEntry("r_ankle_zero_slippage", [&ctl]() {
     auto & tempContact = ctl.getContact("RightFoot");
@@ -191,9 +269,19 @@ void PrepareHandState::start(mc_control::fsm::Controller & ctlInput)
     // Eigen::Vector3d normal = Eigen::Vector3d::UnitZ();
     double mu = mc_rbdyn::Contact::defaultFriction;
     Eigen::Matrix3d multiplier = (Eigen::MatrixXd::Identity(3, 3) - (1 + mu) * normal * normal.transpose());
-    Eigen::Vector3d f_qp = ctl.solver().desiredContactForce(ctl.getContact("RightFoot")).force();
-    // Eigen::Vector3d f_qp = (ctl.robot().forceSensor("RightFootForceSensor").force());
-    Eigen::Vector3d result = multiplier * (f_qp + ctl.miPredictorPtr->getImpulsiveForce("r_sole"));
+    //Eigen::Vector3d f_qp = ctl.solver().desiredContactForce(ctl.getContact("RightFoot")).force();
+    Eigen::Vector3d f_qp = (ctl.robot().forceSensor("RightFootForceSensor").force());
+    //Eigen::Vector3d result = multiplier * (f_qp + ctl.miPredictorPtr->getImpulsiveForce("r_sole"));
+    Eigen::MatrixXd multiplier_;
+    multiplier_.resize(2, 3);
+    multiplier_.setZero();
+    multiplier_(0, 0) = 1.0;
+    multiplier_(0, 2) = - mu; 
+    multiplier_(1,1) = 1.0;
+    multiplier_(1, 2) = - mu; 
+
+
+    Eigen::Vector2d result = multiplier_ * (f_qp - ctl.miPredictorPtr->getImpulsiveForce("r_sole"));
     return result;
   });
 }
