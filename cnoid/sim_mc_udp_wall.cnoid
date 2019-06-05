@@ -146,7 +146,7 @@ items:
           data: 
             modelFile: "${PROGRAM_TOP}/share/hrpsys/samples/environments/DRCTestbedButton.wrl"
             currentBaseLink: "WAIST"
-            rootPosition: [ 0.277931578, 0.03985914, 0 ]
+            rootPosition: [ 0.436063269, 0.0524995644, 0 ]
             rootAttitude: [ 
               -0.996820343, 0.0796818911, 0, 
               -0.0796818911, -0.996820343, 0, 
@@ -244,7 +244,7 @@ views:
     class: SceneView
     mounted: true
     state: 
-      editMode: true
+      editMode: false
       viewpointControlMode: thirdPerson
       collisionLines: false
       polygonMode: fill
@@ -504,17 +504,17 @@ viewAreas:
     contents: 
       type: splitter
       orientation: horizontal
-      sizes: [ 1547, 302 ]
+      sizes: [ 1598, 312 ]
       children: 
         - 
           type: splitter
           orientation: vertical
-          sizes: [ 781, 210 ]
+          sizes: [ 788, 130 ]
           children: 
             - 
               type: splitter
               orientation: horizontal
-              sizes: [ 275, 1266 ]
+              sizes: [ 284, 1308 ]
               children: 
                 - 
                   type: pane
@@ -531,7 +531,7 @@ viewAreas:
         - 
           type: splitter
           orientation: vertical
-          sizes: [ 496, 495 ]
+          sizes: [ 459, 459 ]
           children: 
             - 
               type: pane

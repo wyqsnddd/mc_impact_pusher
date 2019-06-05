@@ -31,19 +31,16 @@ void PrepareHandState::start(mc_control::fsm::Controller & ctlInput)
   ctl.comTaskPtr = mc_tasks::MetaTaskLoader::load(ctl.solver(), ctl.config()("com"));
   ctl.solver().addTask(ctl.comTaskPtr);
 
-  rTransformZero_ = rEfTaskPtr_->get_ef_pose();
-  rEfTaskPtr_->set_ef_pose(rTransformZero_);
-
   Eigen::Vector3d translation_offset;
   translation_offset = ctl.config()("states")("Prepare")("raiseHandOffset");
-  // We need to
-  // auto desiredRotation =  sva::RotY(-M_PI*2/3);
-  auto desiredRotation = sva::RotY(-M_PI / 2);
-  // auto desiredRotation =  sva::RotZ(-M_PI/2);
 
-  // desiredRotation = sva::RotY(-M_PI/2)
-  sva::PTransformd right_raise_hand(desiredRotation * rTransformZero_.rotation().inverse(), translation_offset);
-  rEfTaskPtr_->add_ef_pose(right_raise_hand);
+  // Align hand to vertical wall
+  Eigen::Matrix3d desiredRotation;
+  desiredRotation << 0,1,0,
+                    1,0,0,
+                    0,0,-1;
+
+  rEfTaskPtr_->set_ef_pose(sva::PTransformd(desiredRotation, rEfTaskPtr_->get_ef_pose().translation()+translation_offset));
 
   run(ctlInput);
 
