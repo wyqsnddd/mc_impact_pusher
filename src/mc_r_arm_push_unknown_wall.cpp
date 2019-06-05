@@ -457,7 +457,7 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
     return tempZMP;
   });
 
-  logger().addLogEntry("ZMP_Constraint", [this]() {
+    logger().addLogEntry("ZMP_Constraint", [this]() {
     sva::PTransformd X_0_CoM = sva::PTransformd(robot().com());
     sva::PTransformd X_0_rSole = robot().bodyPosW("r_sole");
     sva::PTransformd X_rSole_CoM = X_0_CoM * X_0_rSole.inv();
@@ -487,23 +487,24 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
 
     sva::ForceVecd F_r_qp = X_rSole_CoM.dualMul(solver().desiredContactForce(getContact("RightFoot")));
 
-    sva::ForceVecd F_r_sensor = robot().forceSensor("RightFootForceSensor").wrench();
+    sva::ForceVecd F_r_sensor = X_rSole_CoM.dualMul(robot().forceSensor("RightFootForceSensor").wrench().vector());
     sva::ForceVecd F_l_qp = X_lSole_CoM.dualMul(solver().desiredContactForce(getContact("LeftFoot")));
 
-    sva::ForceVecd F_l_sensor = robot().forceSensor("LeftFootForceSensor").wrench();
-    Eigen::Vector6d F_sum = F_ee.vector() + F_r_sole.vector() + F_l_sole.vector() + F_r_qp.vector() + F_l_qp.vector();
+    sva::ForceVecd F_l_sensor = X_lSole_CoM.dualMul(robot().forceSensor("LeftFootForceSensor").wrench().vector());
+
+    Eigen::Vector6d F_sum = F_ee.vector() + F_r_sole.vector() + F_l_sole.vector() + F_r_sensor.vector() + F_l_sensor.vector();
 
     Eigen::MatrixXd A_ZMP;
     A_ZMP.resize(4, 6);
     A_ZMP.setZero();
 
-    A_ZMP(0, 5) = -0.12;
+    A_ZMP(0, 5) = -0.08;
     A_ZMP(0, 1) = -1;
-    A_ZMP(1, 5) = -0.12;
+    A_ZMP(1, 5) = -0.08;
     A_ZMP(1, 1) = 1;
-    A_ZMP(2, 5) = -0.06;
+    A_ZMP(2, 5) = -0.15;
     A_ZMP(2, 0) = 1;
-    A_ZMP(3, 5) = -0.06;
+    A_ZMP(3, 5) = -0.15;
     A_ZMP(3, 0) = -1;
 
     Eigen::VectorXd result = A_ZMP * F_sum;
@@ -650,6 +651,7 @@ bool Controller::rArmInContact()
 bool Controller::run()
 {
   bool r = mc_control::fsm::Controller::run();
+
   if(iter_++ == 0)
   {
 
@@ -661,24 +663,28 @@ bool Controller::run()
        supports.push_back({"r_sole", "RightFootForceSensor"});
        supports.push_back({"l_sole", "LeftFootForceSensor"});
 
+       std::vector<double> zmpVector = config()("impact")("constraints")("supportPolygon");
        zmpImpulse_.reset(new mc_impact::zmpWithImpulse
 		       (*miPredictorPtr, 
 			supports,
 			timeStep, timeStep, 
-			{-0.10, 0.10, -0.15, 0.15} /// This is the supportPolygon
+			{zmpVector[0], zmpVector[1], zmpVector[2], zmpVector[3]} /// This is the supportPolygon
 			)
 		       );
 
       solver().addConstraint(zmpImpulse_.get());
     }
+
     if(config()("impact")("constraints")("copWithImpulse"))
     {
+
+       std::vector<double> contactArea = config()("impact")("constraints")("contactArea");
       copImpulseRightFoot_.reset(new mc_impact::copWithImpulse(*miPredictorPtr, "r_sole", "RightFootForceSensor",
-                                                               timeStep, timeStep, {-0.10, 0.10, -0.05, 0.05}));
+                                                               timeStep, timeStep, {contactArea[0], contactArea[1], contactArea[2], contactArea[3]}));
       solver().addConstraint(copImpulseRightFoot_.get());
 
       copImpulseLeftFoot_.reset(new mc_impact::copWithImpulse(*miPredictorPtr, "l_sole", "LeftFootForceSensor",
-                                                              timeStep, timeStep, {-0.10, 0.10, -0.05, 0.05}));
+                                                              timeStep, timeStep, {contactArea[0], contactArea[1], contactArea[2], contactArea[3]}));
       solver().addConstraint(copImpulseLeftFoot_.get());
     }
     if(config()("impact")("constraints")("frictionWithImpulse"))
