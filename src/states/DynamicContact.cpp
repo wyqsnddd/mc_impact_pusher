@@ -128,8 +128,8 @@ bool DynamicContactState::run(mc_control::fsm::Controller & ctlInput)
     ctl.solver().removeTask(rPosTaskPtr_);
     
     if(ctl.config()("impact")("constraints")("zmpWithImpulse")){
-      ctl.solver().removeConstraint(ctl.zmpImpulse_.get());
-      ctl.logger().removeLogEntry("ZMP_Constraint_test");
+      //ctl.solver().removeConstraint(ctl.zmpImpulse_.get());
+      //ctl.logger().removeLogEntry("ZMP_Constraint_test");
     }
     
    /* 
@@ -139,10 +139,7 @@ bool DynamicContactState::run(mc_control::fsm::Controller & ctlInput)
       ctl.solver().removeConstraint(ctl.COPImpulseRightFoot_.get());
     }
 */
-    ctl.solver().updateConstrSize();
-    //std::cout << "---------------End-effector task removed--------------" << std::endl;
-    // ctl.solver().removeConstraint(ctl.copImpulseLeftFoot_);
-    // ctl.solver().removeConstraint(ctl.copImpulseRightFoot_);
+    //ctl.solver().updateConstrSize();
     return true;
   }
 
