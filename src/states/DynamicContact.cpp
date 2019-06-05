@@ -127,7 +127,8 @@ bool DynamicContactState::run(mc_control::fsm::Controller & ctlInput)
     //output("OK");
     ctl.solver().removeTask(rPosTaskPtr_);
     
-    if(ctl.config()("impact")("constraints")("zmpWithImpulse")){
+    if(ctl.config()("impact")("constraints")("zmpWithImpulse") && !removedConstraint_){
+      removedConstraint_ = true;
       ctl.solver().removeConstraint(ctl.zmpImpulse_.get());
       ctl.logger().removeLogEntry("ZMP_Constraint_test");
     }
@@ -155,6 +156,7 @@ void DynamicContactState::teardown(mc_control::fsm::Controller & ctl_)
   ctl.solver().removeTask(rPosTaskPtr_);
   ctl.solver().removeTask(ctl.comTaskPtr);
   ctl.solver().removeConstraint(ctl.boundTorqueJump_.get());
+  ctl.solver().updateConstrSize();
   // ctl.solver().removeConstraint(ctl.boundVelocityJump_.get());
   // ctl.solver().removeConstraint(positiveContactForceRightFoot_.get());
   // ctl.solver().removeConstraint(positiveContactForceRightFoot_.get());
