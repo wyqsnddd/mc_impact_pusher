@@ -309,7 +309,7 @@ bool PrepareHandState::run(mc_control::fsm::Controller & ctlInput)
 {
 
   auto & ctl = static_cast<Controller &>(ctlInput);
-  std::cout << "PrepareState: the right ef error is: " << rEfTaskPtr_->eval().norm() << std::endl;
+  //std::cout << "PrepareState: the right ef error is: " << rEfTaskPtr_->eval().norm() << std::endl;
 
   Eigen::Vector3d surfaceNormal;
   surfaceNormal << 1, 0, 0;

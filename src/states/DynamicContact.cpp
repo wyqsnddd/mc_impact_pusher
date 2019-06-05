@@ -105,7 +105,7 @@ void DynamicContactState::start(mc_control::fsm::Controller & ctlInput)
 bool DynamicContactState::run(mc_control::fsm::Controller & ctlInput)
 {
   auto & ctl = static_cast<Controller &>(ctlInput);
-  std::cout << "DynamicsState: The right ef error is: " << rPosTaskPtr_->eval().norm() << std::endl;
+  //std::cout << "DynamicsState: The right ef error is: " << rPosTaskPtr_->eval().norm() << std::endl;
   // std::cout << "DynamicsState: The right sole OSD force is: " << ctl.miPredictorPtr->getOsdForce("l_sole")<<
   // std::endl; std::cout << "DynamicsState: The right sole OSD force is: " <<
   // ctl.miPredictorPtr->getOsdForce("r_sole")<< std::endl;
@@ -122,11 +122,25 @@ bool DynamicContactState::run(mc_control::fsm::Controller & ctlInput)
   {
     // Output the transition signal such that we can move on according to the transitions
 
-    output("ImpactDetected");
-    std::cout << "---------------Impact Detected--------------" << std::endl;
-    // output("OK");
+    //output("ImpactDetected");
+    //std::cout << "---------------Impact Detected--------------" << std::endl;
+    //output("OK");
     ctl.solver().removeTask(rPosTaskPtr_);
-    std::cout << "---------------End-effector task removed--------------" << std::endl;
+    
+    if(ctl.config()("impact")("constraints")("zmpWithImpulse")){
+      ctl.solver().removeConstraint(ctl.zmpImpulse_.get());
+      ctl.logger().removeLogEntry("ZMP_Constraint_test");
+    }
+    
+   /* 
+    if(ctl.config()("impact")("constraints")("copWithImpulse"))
+    {
+      ctl.solver().removeConstraint(ctl.COPImpulseLeftFoot_.get());
+      ctl.solver().removeConstraint(ctl.COPImpulseRightFoot_.get());
+    }
+*/
+    ctl.solver().updateConstrSize();
+    //std::cout << "---------------End-effector task removed--------------" << std::endl;
     // ctl.solver().removeConstraint(ctl.copImpulseLeftFoot_);
     // ctl.solver().removeConstraint(ctl.copImpulseRightFoot_);
     return true;
