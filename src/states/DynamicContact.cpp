@@ -152,7 +152,30 @@ void DynamicContactState::teardown(mc_control::fsm::Controller & ctl_)
   auto & ctl = static_cast<Controller &>(ctl_);
   ctl.solver().removeTask(rPosTaskPtr_);
   ctl.solver().removeTask(ctl.comTaskPtr);
-  ctl.solver().removeConstraint(ctl.boundTorqueJump_.get());
+
+  if(ctl.config()("impact")("constraints")("zmpWithImpulse"))
+  {
+    ctl.solver().removeConstraint(ctl.zmpImpulse_.get());
+  }
+
+  if(ctl.config()("impact")("constraints")("copWithImpulse"))
+  {
+    ctl.solver().removeConstraint(ctl.copImpulseLeftFoot_.get());
+    ctl.solver().removeConstraint(ctl.copImpulseRightFoot_.get());
+  }
+  
+  if(ctl.config()("impact")("constraints")("frictionWithImpulse")){
+    ctl.solver().removeConstraint(ctl.frictionImpulseLeftFoot_.get());
+    ctl.solver().removeConstraint(ctl.frictionImpulseRightFoot_.get());
+  }
+
+  if(ctl.config()("impact")("constraints")("jointTorque")){
+    ctl.solver().removeConstraint(ctl.boundTorqueJump_.get());
+  }
+
+  if(ctl.config()("impact")("constraints")("jointVelocity")){
+    ctl.solver().removeConstraint(ctl.boundVelocityJump_.get());
+  }
   ctl.solver().updateConstrSize();
   // ctl.solver().removeConstraint(ctl.boundVelocityJump_.get());
   // ctl.solver().removeConstraint(positiveContactForceRightFoot_.get());
