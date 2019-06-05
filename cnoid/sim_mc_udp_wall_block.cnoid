@@ -20,7 +20,7 @@ items:
           plugin: Body
           class: BodyItem
           data: 
-            modelFile: "${MODEL}/HRP4LIRMM/model/HRP4LIRMM_main.wrl"
+            modelFile: "${MODEL}/HRP4LIRMM/model/HRP4LIRMM_block.wrl"
             currentBaseLink: "WAIST"
             rootPosition: [ -0.00444289964, 0.00195066485, 0.746657583 ]
             rootAttitude: [ 
@@ -145,7 +145,7 @@ items:
           class: BodyItem
           data: 
             modelFile: "${PROGRAM_TOP}/share/hrpsys/samples/environments/DRCTestbedButton.wrl"
-            currentBaseLink: "WAIST"
+            currentBaseLink: ""
             rootPosition: [ 0.436063269, 0.0524995644, 0 ]
             rootAttitude: [ 
               -0.996820343, 0.0796818911, 0, 
@@ -283,9 +283,9 @@ views:
           fieldOfView: 0.6978
           near: 0.01
           far: 10000
-          eye: [ -0.0879828569, 3.3921885, 2.48821758 ]
-          direction: [ -0.0267214488, -0.867407691, -0.496880128 ]
-          up: [ -0.0152996812, -0.496644522, 0.867819185 ]
+          eye: [ 0.305518499, -2.50956258, 1.34252621 ]
+          direction: [ 0.0482033846, 0.978880448, -0.198669327 ]
+          up: [ 0.00977130961, 0.198428886, 0.980066579 ]
         - 
           camera: [ System, Orthographic ]
           orthoHeight: 20
@@ -358,7 +358,6 @@ views:
       slider: true
       dial: false
       labelOnLeft: true
-      currentBodyItem: 8
   - 
     id: 12
     name: "Joint State"
@@ -371,7 +370,6 @@ views:
     class: LinkSelectionView
     state: 
       listingMode: "Link List"
-      currentBodyItem: 8
       bodyItems: 
         - 
           id: 2
@@ -420,8 +418,6 @@ toolbars:
     snapDistance: 0.025
     penetrationBlockDepth: 0.0005
     lazyCollisionDetectionMode: true
-  "BodyBar": 
-    current: 8
   "LeggedBodyBar": 
     stanceWidth: 0.15
   "BodyMotionGenerationBar": 
@@ -504,30 +500,8 @@ viewAreas:
     contents: 
       type: splitter
       orientation: horizontal
-      sizes: [ 1598, 312 ]
+      sizes: [ 341, 1569 ]
       children: 
-        - 
-          type: splitter
-          orientation: vertical
-          sizes: [ 788, 130 ]
-          children: 
-            - 
-              type: splitter
-              orientation: horizontal
-              sizes: [ 284, 1308 ]
-              children: 
-                - 
-                  type: pane
-                  views: [ 1 ]
-                  current: 1
-                - 
-                  type: pane
-                  views: [ 5 ]
-                  current: 5
-            - 
-              type: pane
-              views: [ 2, 17 ]
-              current: 2
         - 
           type: splitter
           orientation: vertical
@@ -535,12 +509,16 @@ viewAreas:
           children: 
             - 
               type: pane
-              views: [ 12 ]
-              current: 12
+              views: [ 1, 12, 9 ]
+              current: 1
             - 
               type: pane
-              views: [ 9 ]
-              current: 9
+              views: [ 2, 17 ]
+              current: 2
+        - 
+          type: pane
+          views: [ 5 ]
+          current: 5
 layoutOfToolBars: 
   rows: 
     - 

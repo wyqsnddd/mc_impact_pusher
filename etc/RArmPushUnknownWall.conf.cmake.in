@@ -149,7 +149,7 @@
       "Prepare":
       {
         "base": "PrepareHand",
-        "raiseHandOffset" : [-0.2, 0.0, 0.18],
+        "raiseHandOffset" : [0.15, 0.0, 0.2],
         "EfThreshold" : 1.0e-1,
       },
       "Contact":
