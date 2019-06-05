@@ -200,7 +200,7 @@ void PrepareHandState::start(mc_control::fsm::Controller & ctlInput)
     Eigen::Vector3d normal = Eigen::Vector3d::UnitZ();
     Eigen::Matrix3d nullProjector = Eigen::MatrixXd::Identity(3, 3) - normal * normal.transpose();
 
-    Eigen::Vector3d f_qp = ctl.solver().desiredContactForce(ctl.getContact("RightFoot")).force();
+    Eigen::Vector3d f_qp = (ctl.robot().forceSensor("RightFootForceSensor").force());
     return (nullProjector * f_qp).norm();
   });
   ctl.logger().addLogEntry("r_ankle_tangential_max_friction", [&ctl]() {
@@ -208,7 +208,7 @@ void PrepareHandState::start(mc_control::fsm::Controller & ctlInput)
     Eigen::Matrix3d projector = normal * normal.transpose();
     double mu = mc_rbdyn::Contact::defaultFriction;
 
-    Eigen::Vector3d f_qp = ctl.solver().desiredContactForce(ctl.getContact("RightFoot")).force();
+    Eigen::Vector3d f_qp = (ctl.robot().forceSensor("RightFootForceSensor").force());
     return (projector * f_qp * mu).norm();
   });
 
@@ -216,7 +216,7 @@ void PrepareHandState::start(mc_control::fsm::Controller & ctlInput)
     Eigen::Vector3d normal = Eigen::Vector3d::UnitZ();
     Eigen::Matrix3d nullProjector = Eigen::MatrixXd::Identity(3, 3) - normal * normal.transpose();
 
-    Eigen::Vector3d f_qp = ctl.solver().desiredContactForce(ctl.getContact("LeftFoot")).force();
+    Eigen::Vector3d f_qp = (ctl.robot().forceSensor("LeftFootForceSensor").force());
     return (nullProjector * f_qp).norm();
   });
   ctl.logger().addLogEntry("l_ankle_tangential_max_friction", [&ctl]() {
@@ -224,7 +224,7 @@ void PrepareHandState::start(mc_control::fsm::Controller & ctlInput)
     Eigen::Matrix3d projector = normal * normal.transpose();
     double mu = mc_rbdyn::Contact::defaultFriction;
 
-    Eigen::Vector3d f_qp = ctl.solver().desiredContactForce(ctl.getContact("LeftFoot")).force();
+    Eigen::Vector3d f_qp = (ctl.robot().forceSensor("LeftFootForceSensor").force());
     return (projector * f_qp * mu).norm();
   });
 
