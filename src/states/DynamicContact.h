@@ -25,6 +25,8 @@ protected:
   double contactVelocity_;
   mc_rtc::Configuration state_conf_;
 
+  bool removedConstraint_ = false;
+
   std::unique_ptr<mc_impact::BoundJointTorqueJump> boundTorqueJump_;
   std::unique_ptr<mc_impact::BoundJointVelocityJump> boundVelocityJump_;
   std::unique_ptr<mc_impact::ZeroSlippageWithImpulse> zeroSlippageLeftFoot_;
