@@ -132,7 +132,7 @@
 	 "SlippageRight": false,
 	 "frictionWithImpulse": true,
 	 "copWithImpulse": true,
-	 "ZMP": true
+	 "zmpWithImpulse": true
 	 },
     "estimation":{
 	"coeFrictionDeduction": 0.2,

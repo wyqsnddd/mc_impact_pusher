@@ -9,8 +9,9 @@
 #include "BoundJointVelocityJump.h"
 #include "COPInsideContactAreaWithImpulse.h"
 #include "ZeroSlippageWithImpulse.h"
-#include "frictionWithImpulse.h"
 #include "copWithImpulse.h"
+#include "frictionWithImpulse.h"
+#include "zmpWithImpulse.h"
 
 struct Controller : public mc_control::fsm::Controller
 {
@@ -31,6 +32,7 @@ struct Controller : public mc_control::fsm::Controller
   std::unique_ptr<mc_impact::frictionWithImpulse> frictionImpulseLeftFoot_;
   std::unique_ptr<mc_impact::copWithImpulse> copImpulseLeftFoot_;
   std::unique_ptr<mc_impact::copWithImpulse> copImpulseRightFoot_;
+  std::unique_ptr<mc_impact::zmpWithImpulse> zmpImpulse_;
 
   // Force sensor threshold
   double forceThreshold = 3.0;
