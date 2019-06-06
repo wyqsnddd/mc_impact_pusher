@@ -152,10 +152,10 @@ items:
               -0.0796818911, -0.996820343, 0, 
               0, 0, 1 ]
             jointPositions: [  0.000000 ]
-            initialRootPosition: [ 0, -0.665, 0 ]
+            initialRootPosition: [ 0.436063269, 0.0524995644, 0 ]
             initialRootAttitude: [ 
-              1, 0, 0, 
-              0, 1, 0, 
+              -0.996820343, 0.0796818911, 0, 
+              -0.0796818911, -0.996820343, 0, 
               0, 0, 1 ]
             initialJointPositions: [  0.000000 ]
             zmp: [ 0, 0, 0 ]
@@ -182,6 +182,7 @@ views:
     class: ItemTreeView
     mounted: true
     state: 
+      selected: [ 8 ]
       checked: [ 2, 3, [ 4, "ForceSensor" ], 5, 7, 8 ]
       expanded: [ 1, 2, 3, 4, 6 ]
   - 
@@ -509,7 +510,7 @@ viewAreas:
         - 
           type: splitter
           orientation: vertical
-          sizes: [ 788, 130 ]
+          sizes: [ 803, 133 ]
           children: 
             - 
               type: splitter
@@ -531,7 +532,7 @@ viewAreas:
         - 
           type: splitter
           orientation: vertical
-          sizes: [ 459, 459 ]
+          sizes: [ 468, 468 ]
           children: 
             - 
               type: pane

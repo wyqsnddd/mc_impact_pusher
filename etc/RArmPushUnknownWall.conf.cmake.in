@@ -62,24 +62,6 @@
     {
       "type": "contact"
     },
-    {
-      //"type": "dynamics",
-      // arnaud: @yuquan I'm using a kinematic constraint here to generate the impact motion
-      // in choreonoid and avoid having the "QP fail to run" due to the robot reaching outside of
-      // its support polygon (violation of the DynamicsConstraint)
-      // In reality, we should be using DynamicsConstraint here once you have implemented your safe-impact constraints
-      "type": "kinematics",
-      "robotIndex": 0,
-      "damper": [
-        0.005,
-        0.0005,
-        0.5
-      ]
-    },
-    {
-      "type": "dynamics",
-      "robotIndex": 1
-    }
   ],
   "collisions": [
     {
@@ -141,15 +123,15 @@
   "impact": {
     "constraints": {
       "jointVelocity": false,
-      "jointTorque": true,
+      "jointTorque": false,
       "CoPLeft": false,
       "CoPRight": false,
       "SlippageLeft": false,
       "SlippageRight": false,
-      "frictionWithImpulse": true,
-      "copWithImpulse": true,
+      "frictionWithImpulse": false,
+      "copWithImpulse": false,
       "contactArea": [-0.10, 0.10, -0.05, 0.05],
-      "zmpWithImpulse": true,
+      "zmpWithImpulse": false,
       "supportPolygon": [-0.07, 0.07, -0.12, 0.12]
     },
     "estimation": {
@@ -165,7 +147,7 @@
     "Prepare":
     {
       "base": "PrepareHand",
-      "raiseHandOffset" : [0.15, 0.05, 0.2],
+      "raiseHandOffset" : [0.15, -0.05, 0.2],
       "EfThreshold" : 0.05
     },
     "Contact":
@@ -176,15 +158,10 @@
       // Velocity control for the end-effector
       "rightEfStiffness": 0.0,
       "rightEfDamping": 300.0
-    },
-    "Final": {
-      "base": "Pause",
-      "placeholderParameter": 0.1
     }
   },
+  "init": "Prepare",
   "transitions": [
-    //[ "Pause", "OK", "Prepare", "Auto" ],
     [ "Prepare", "RightHandReady", "Contact", "Auto" ]
-    //[ "Contact", "OK", "Final", "Auto" ]
   ]
 }

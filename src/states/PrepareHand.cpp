@@ -18,7 +18,7 @@ void PrepareHandState::start(mc_control::fsm::Controller & ctlInput)
       ctl.config()("hrp4")("rightEfTask")("bodyName"), ctl.robots(), 0,
       ctl.config()("hrp4")("rightEfTask")("stiffness"), ctl.config()("hrp4")("rightEfTask")("weight"));
 
-  std::vector<std::string> right_joints = {"R_SHOULDER_P", "R_SHOULDER_R", "R_SHOULDER_Y", "R_ELBOW_P",
+  std::vector<std::string> right_joints = {"CHEST_Y", "R_SHOULDER_P", "R_SHOULDER_R", "R_SHOULDER_Y", "R_ELBOW_P",
                                            "R_WRIST_Y",    "R_WRIST_P",    "R_WRIST_R"};
   rEfTaskPtr_->selectActiveJoints(ctl.solver(), right_joints);
 
@@ -37,8 +37,8 @@ void PrepareHandState::start(mc_control::fsm::Controller & ctlInput)
   // Align hand to vertical wall
   Eigen::Matrix3d desiredRotation;
   desiredRotation << 0,1,0,
-                    1,0,0,
-                    0,0,-1;
+                     1,0,0,
+                     0,0,-1;
 
   rEfTaskPtr_->set_ef_pose(sva::PTransformd(desiredRotation, rEfTaskPtr_->get_ef_pose().translation()+translation_offset));
 
@@ -93,7 +93,7 @@ void PrepareHandState::start(mc_control::fsm::Controller & ctlInput)
     Eigen::Vector6d sumWrench;
     ctl.zmpImpulse_->getComItems(sumJac, sumWrench);
 
-    Eigen::MatrixXd A_;  
+    Eigen::MatrixXd A_;
     Eigen::Vector4d b_;
     Eigen::VectorXd alpha_;
     int nDof = ctl.miPredictorPtr->getRobot().mb().nrDof();
@@ -105,7 +105,7 @@ void PrepareHandState::start(mc_control::fsm::Controller & ctlInput)
     rbd::paramToVector(ctl.miPredictorPtr->getRobot().mbc().alpha, alpha_);
 
   // std::cout<<"size of alpha_"<<alpha_.rows()<<std::endl;
-    b_ = -ctl.zmpImpulse_->getZMP()*(sumWrench 
+    b_ = -ctl.zmpImpulse_->getZMP()*(sumWrench
 		    + sumJac* alpha_ / ctl.timeStep);
 
     //Eigen::VectorXd result = A_*rbd::dofToVector(robot().mb(), robot().mbc().alphaD) - b_;

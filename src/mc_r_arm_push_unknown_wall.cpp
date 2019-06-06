@@ -8,7 +8,7 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
   impactIndicator_ = -20.0;
   std::cout << "Kinematics and Dynamics constraints are created." << std::endl;
   solver().addConstraintSet(kinematicsConstraint);
-  solver().addConstraintSet(dynamicsConstraint);
+  // solver().addConstraintSet(dynamicsConstraint);
 
   logger().addLogEntry("CoP_LeftFoot_World", [this]() {
     auto & robot = this->realRobots().robot();
@@ -34,6 +34,11 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
     }
     return zmp;
   });
+  logger().addLogEntry("RightWrist",
+                       [this]()
+                       {
+                        return robot().mbc().bodyPosW[robot().bodyIndexByName("r_wrist")];
+                       });
   logger().addLogEntry("realRobot_posW", [this]() { return realRobot().posW(); });
 
   gui()->addElement({"Forces"},
@@ -135,8 +140,11 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
     // Eigen::VectorXd eeVelJump =
     return miPredictorPtr->getEeVelocityJump();
   });
-  logger().addLogEntry("ee_Vel", [this]() {
-    return realRobots().robot().mbc().bodyVelW[realRobots().robot().mb().bodyIndexByName("r_wrist")].linear();
+  logger().addLogEntry("ee_Vel_real", [this]() {
+    return realRobots().robot().mbc().bodyVelW[realRobots().robot().mb().bodyIndexByName("r_wrist")];
+  });
+  logger().addLogEntry("ee_Vel_qp", [this]() {
+    return robot().mbc().bodyVelW[robot().mb().bodyIndexByName("r_wrist")];
   });
 
   logger().addLogEntry("ee_dq", [this]() { return miPredictorPtr->getBranchJointVelJump("r_wrist"); });
@@ -665,9 +673,9 @@ bool Controller::run()
 
        std::vector<double> zmpVector = config()("impact")("constraints")("supportPolygon");
        zmpImpulse_.reset(new mc_impact::zmpWithImpulse
-		       (*miPredictorPtr, 
+		       (*miPredictorPtr,
 			supports,
-			timeStep, timeStep, 
+			timeStep, timeStep,
 			{zmpVector[0], zmpVector[1], zmpVector[2], zmpVector[3]} /// This is the supportPolygon
 			)
 		       );
