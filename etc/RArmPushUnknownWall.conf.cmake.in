@@ -118,11 +118,27 @@
       "stiffness": 2.0,
       "weight": 100.0
     },
-    "leftEfTask": {"bodyName" : "l_wrist", "stiffness" : 20.0, "weight" : 1000.0, "bound" : 0.1 },
-    "rightEfTask": {"bodyName" : "r_wrist", "stiffness" : 5.0, "weight" : 200.0, "bound" : 0.1 },
-    "rightEfTaskDynamic": {"bodyName" : "r_wrist", "stiffness" : 5.0, "weight" : 200.0, "bound" : 0.1 },
+    "leftEfTask": {
+      "bodyName" : "l_wrist",
+      "stiffness" : 20.0,
+      "weight" : 1000.0,
+      "bound" : 0.1
+    },
+    "rightEfTask": {
+      "bodyName" : "r_wrist",
+      "stiffness" : 5.0,
+      "weight" : 200.0,
+      "bound" : 0.1
+    },
+    "rightEfTaskDynamic":
+    {
+      "bodyName" : "r_wrist",
+      "stiffness" : 5.0,
+      "weight" : 200.0,
+      "bound" : 0.1
+    }
   },
-  "impact":{
+  "impact": {
     "constraints": {
       "jointVelocity": false,
       "jointTorque": true,
@@ -136,7 +152,7 @@
       "zmpWithImpulse": true,
       "supportPolygon": [-0.07, 0.07, -0.12, 0.12]
     },
-    "estimation":{
+    "estimation": {
       "coeFrictionDeduction": 0.2,
       "coeRestitution": 0.9,
       "delta_dt": 0.005,
@@ -149,8 +165,8 @@
     "Prepare":
     {
       "base": "PrepareHand",
-      "raiseHandOffset" : [0.15, 0.05, 0.18],
-      "EfThreshold" : 0.01,
+      "raiseHandOffset" : [0.15, 0.05, 0.2],
+      "EfThreshold" : 0.05
     },
     "Contact":
     {
@@ -159,9 +175,12 @@
       "pushDepth":  [1.0, 0.0, 0.0], // Target position that should generate the impact
       // Velocity control for the end-effector
       "rightEfStiffness": 0.0,
-      "rightEfDamping": 300.0,
+      "rightEfDamping": 300.0
     },
-    "Final": { "base": "Pause", "placeholderParameter": 0.1 }
+    "Final": {
+      "base": "Pause",
+      "placeholderParameter": 0.1
+    }
   },
   "transitions": [
     //[ "Pause", "OK", "Prepare", "Auto" ],
