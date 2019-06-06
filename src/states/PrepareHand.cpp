@@ -85,9 +85,65 @@ void PrepareHandState::start(mc_control::fsm::Controller & ctlInput)
     Eigen::VectorXd result = A_cop * (sensorForce.vector());
     return result;
   });
+ 
+  if(ctl.config()("impact")("constraints")("zmpWithImpulse")("on")){
 
-  if(ctl.config()("impact")("constraints")("zmpWithImpulse")){
- ctl.logger().addLogEntry("ZMP_Constraint_test", [&ctl]() {
+    ctl.logger().addLogEntry("ZMP_perturbation_zmpconstraint", [&ctl]() {
+      return ctl.zmpImpulse_->getZMP_perturbation();
+    });
+    ctl.logger().addLogEntry("ZMP_sensor_zmpconstraint", [&ctl]() {
+      return ctl.zmpImpulse_->getZMP_sensor();
+    });
+    ctl.logger().addLogEntry("ZMP_constraint_difference", [&ctl]() {
+      Eigen::VectorXd difference = ctl.zmpImpulse_->getZMP_constraint_difference();
+      return difference;
+    });
+
+
+    ctl.logger().addLogEntry("ZMP_prediction_zmpconstraint", [&ctl]() {
+		 /*
+    Eigen::MatrixXd sumJac;
+    Eigen::Vector6d sumWrench;
+    ctl.zmpImpulse_->getComItems(sumJac, sumWrench);
+
+    Eigen::MatrixXd A_;  
+    Eigen::Vector4d b_;
+    Eigen::VectorXd alpha_;
+    int nDof = ctl.miPredictorPtr->getRobot().mb().nrDof();
+    A_.resize(4, nDof);
+    A_.setZero();
+    b_.setZero();
+    A_ = (ctl.timeStep/ ctl.timeStep) * ctl.zmpImpulse_->getZMP()* sumJac;
+  // std::cout<<"size of A_: "<<A_.rows()<<", "<<A_.cols()<<std::endl;
+    rbd::paramToVector(ctl.miPredictorPtr->getRobot().mbc().alpha, alpha_);
+
+  // std::cout<<"size of alpha_"<<alpha_.rows()<<std::endl;
+    b_ = -ctl.zmpImpulse_->getZMP()*(sumWrench 
+		    + sumJac* alpha_ / ctl.timeStep);
+
+    //Eigen::VectorXd result = A_*rbd::dofToVector(robot().mb(), robot().mbc().alphaD) - b_;
+    */
+/*
+    Eigen::MatrixXd sumJac;
+    Eigen::Vector6d sumWrench;
+    ctl.zmpImpulse_->getComItems(sumJac, sumWrench);
+    Eigen::VectorXd temp =
+        (rbd::dofToVector(ctl.robot().mb(), ctl.robot().mbc().alpha)
+         + rbd::dofToVector(ctl.robot().mb(), ctl.robot().mbc().alphaD) * ctl.miPredictorPtr->getImpactDuration_());
+
+    Eigen::VectorXd result = (1/ctl.miPredictorPtr->getImpactDuration_())*sumJac*temp; 
+
+    double denominator = ( sumWrench(5) + result(5));
+
+    Eigen::Vector3d tempZMP = Eigen::Vector3d::Zero();
+    tempZMP.x() = - ( sumWrench(1) + result(1))/denominator;
+    tempZMP.y() =   ( sumWrench(0) + result(0))/denominator;
+    */
+    return ctl.zmpImpulse_->getZMP_prediction();
+    });
+
+
+    ctl.logger().addLogEntry("ZMP_Constraint_test", [&ctl]() {
 		 /*
     Eigen::MatrixXd sumJac;
     Eigen::Vector6d sumWrench;

@@ -61,15 +61,10 @@ bool DynamicContactState::run(mc_control::fsm::Controller & ctlInput)
   if(ctl.rArmInContact())
   {
     //output("ImpactDetected");
-    //output("OK");
-    ctl.solver().removeTask(rPosTaskPtr_);
+    output("OK");
+    //ctl.solver().removeTask(rPosTaskPtr_);
     
-    if(ctl.config()("impact")("constraints")("zmpWithImpulse") && !removedConstraint_){
-      removedConstraint_ = true;
-      ctl.solver().removeConstraint(ctl.zmpImpulse_.get());
-      ctl.logger().removeLogEntry("ZMP_Constraint_test");
-    }
-    
+  
     return true;
   }
 
@@ -81,31 +76,36 @@ void DynamicContactState::teardown(mc_control::fsm::Controller & ctl_)
   auto & ctl = static_cast<Controller &>(ctl_);
   ctl.solver().removeTask(rPosTaskPtr_);
   ctl.solver().removeTask(ctl.comTaskPtr);
-
-  if(ctl.config()("impact")("constraints")("zmpWithImpulse"))
-  {
-    ctl.solver().removeConstraint(ctl.zmpImpulse_.get());
-  }
-
-  if(ctl.config()("impact")("constraints")("copWithImpulse"))
+    if(ctl.config()("impact")("constraints")("zmpWithImpulse")("on") && !removedConstraint_){
+      removedConstraint_ = true;
+      ctl.solver().removeConstraint(ctl.zmpImpulse_.get());
+      ctl.logger().removeLogEntry("ZMP_Constraint_test");
+      ctl.logger().removeLogEntry("ZMP_constraint_difference");
+      ctl.logger().removeLogEntry("ZMP_perturbation_zmpconstraint");
+      ctl.logger().removeLogEntry("ZMP_sensor_zmpconstraint");
+      ctl.logger().removeLogEntry("ZMP_prediction_zmpconstraint");
+    }
+   
+  if(ctl.config()("impact")("constraints")("copWithImpulse")("on") )
   {
     ctl.solver().removeConstraint(ctl.copImpulseLeftFoot_.get());
     ctl.solver().removeConstraint(ctl.copImpulseRightFoot_.get());
   }
   
-  if(ctl.config()("impact")("constraints")("frictionWithImpulse")){
+  if(ctl.config()("impact")("constraints")("frictionWithImpulse") ){
     ctl.solver().removeConstraint(ctl.frictionImpulseLeftFoot_.get());
     ctl.solver().removeConstraint(ctl.frictionImpulseRightFoot_.get());
   }
 
-  if(ctl.config()("impact")("constraints")("jointTorque")){
+  if(ctl.config()("impact")("constraints")("jointTorque")("on") ){
     ctl.solver().removeConstraint(ctl.boundTorqueJump_.get());
   }
 
-  if(ctl.config()("impact")("constraints")("jointVelocity")){
+  if(ctl.config()("impact")("constraints")("jointVelocity") ){
     ctl.solver().removeConstraint(ctl.boundVelocityJump_.get());
   }
   ctl.solver().updateConstrSize();
+ 
 }
 
 EXPORT_SINGLE_STATE("DynamicContact", DynamicContactState)

@@ -11,7 +11,7 @@
     "contact_detection":
     {
 	    "UseForceSensor": true, // if true, use the force sensors to detect contact, otherwise use geometric sensor
-	    "ForceThreshold": 20.0, // Force threshold that triggers transition. Only used if UseForceSensor is true
+	    "ForceThreshold": 15.0, // Force threshold that triggers transition. Only used if UseForceSensor is true
 	    "ContactThreshold": 1e-5, // Contact distance threshold that triggers transition.
     },
     // Lifting height (m)
@@ -120,25 +120,23 @@
         },
         "leftEfTask": {"bodyName" : "l_wrist", "stiffness" : 20.0, "weight" : 1000.0, "bound" : 0.1 },
         "rightEfTask": {"bodyName" : "r_wrist", "stiffness" : 5.0, "weight" : 200.0, "bound" : 0.1 },
-	"rightEfTaskDynamic": {"bodyName" : "r_wrist", "stiffness" : 5.0, "weight" : 200.0, "bound" : 0.1 },
+	"rightEfTaskDynamic": {"bodyName" : "r_wrist", "stiffness" : 5.0, "weight" : 150.0, "bound" : 0.1 },
     },
     "impact":{
       "constraints": {
          "jointVelocity": false,
-	 "jointTorque": true,
+	 "jointTorque": {"on": true, "multiplier": 1.0},
 	 "CoPLeft": false,
 	 "CoPRight": false,
 	 "SlippageLeft": false,
 	 "SlippageRight": false,
-	 "frictionWithImpulse": true,
-	 "copWithImpulse": true,
-	 "contactArea": [-0.10, 0.10, -0.05, 0.05],  
-	 "zmpWithImpulse": true,
-	 "supportPolygon": [-0.07, 0.07, -0.12, 0.12]
+	 "frictionWithImpulse": false,
+	 "copWithImpulse": {"on": false, "contactArea": [-0.09, 0.09, -0.05, 0.05]},
+	 "zmpWithImpulse": {"on": false, "supportPolygon": [-0.06, 0.06, -0.12, 0.12], "debug": true},
 	 },
     "estimation":{
 	"coeFrictionDeduction": 0.2,
-	"coeRestitution": 0.9,
+	"coeRestitution": 0.1,
 	"delta_dt": 0.005,
 	"useLinearJacobian": true,
 	"impactBodyName": "r_wrist",
@@ -155,7 +153,7 @@
       "Contact":
       {
         "base": "DynamicContact", // C++ state
-        "contactVelocity" : [0.5, 0.0, 0.0], //
+        "contactVelocity" : [0.4, 0.0, 0.0], //
         "pushDepth":  [1.0, 0.0, 0.0], // Target position that should generate the impact 
         // Velocity control for the end-effector
         "rightEfStiffness": 0.0,
@@ -165,7 +163,7 @@
     },
     "transitions": [
         //[ "Pause", "OK", "Prepare", "Auto" ],
-        [ "Prepare", "RightHandReady", "Contact", "Auto" ]
-        //[ "Contact", "OK", "Final", "Auto" ]
+        [ "Prepare", "RightHandReady", "Contact", "Auto" ],
+        [ "Contact", "OK", "Final", "Auto" ]
     ]
 }
