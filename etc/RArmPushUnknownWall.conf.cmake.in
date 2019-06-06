@@ -130,7 +130,7 @@
       "SlippageRight": false,
       "frictionWithImpulse": true,
       "copWithImpulse": {"on": true, "contactArea": [-0.09, 0.09, -0.05, 0.05]},
-      "zmpWithImpulse": {"on": true, "supportPolygon": [-0.06, 0.06, -0.12, 0.12], "debug": true}
+      "zmpWithImpulse": {"on": true, "supportPolygon": [-0.08, 0.08, -0.12, 0.12], "debug": true}
     },
     "estimation": {
       "coeFrictionDeduction": 0.2,
