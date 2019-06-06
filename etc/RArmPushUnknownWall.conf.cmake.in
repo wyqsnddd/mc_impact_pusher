@@ -11,7 +11,7 @@
   "contact_detection":
   {
     "UseForceSensor": true, // if true, use the force sensors to detect contact, otherwise use geometric sensor
-    "ForceThreshold": 20.0, // Force threshold that triggers transition. Only used if UseForceSensor is true
+    "ForceThreshold": 50.0, // Force threshold that triggers transition. Only used if UseForceSensor is true
     "ContactThreshold": 1e-5, // Contact distance threshold that triggers transition.
   },
   // Lifting height (m)
@@ -122,19 +122,19 @@
   },
   "impact": {
     "constraints": {
-      "jointVelocity": false,
+      "jointVelocity": true,
       "jointTorque": {"on": true, "multiplier": 1.0 },
       "CoPLeft": false,
       "CoPRight": false,
       "SlippageLeft": false,
       "SlippageRight": false,
-      "frictionWithImpulse": false,
-	    "copWithImpulse": {"on": false, "contactArea": [-0.09, 0.09, -0.05, 0.05]},
-	    "zmpWithImpulse": {"on": false, "supportPolygon": [-0.06, 0.06, -0.12, 0.12], "debug": true}
+      "frictionWithImpulse": true,
+      "copWithImpulse": {"on": true, "contactArea": [-0.09, 0.09, -0.05, 0.05]},
+      "zmpWithImpulse": {"on": true, "supportPolygon": [-0.06, 0.06, -0.12, 0.12], "debug": true}
     },
     "estimation": {
       "coeFrictionDeduction": 0.2,
-      "coeRestitution": 0.9,
+      "coeRestitution": 0.5,
       "delta_dt": 0.005,
       "useLinearJacobian": true,
       "impactBodyName": "r_wrist",
@@ -151,8 +151,18 @@
     "Contact":
     {
       "base": "DynamicContact", // C++ state
-      "contactVelocity" : [0.5, 0.0, 0.0], //
+      "contactVelocity" : [2.0, 0.0, 0.0], //
       "pushDepth":  [1.0, 0.0, 0.0], // Target position that should generate the impact
+      // Velocity control for the end-effector
+      "rightEfStiffness": 0.0,
+      "rightEfDamping": 300.0
+    },
+    "Stabilize":
+    {
+      "base": "StabilizeContact", // C++ state
+      "contactVelocity" : [2.0, 0.0, 0.0], //
+      "surfaceName": "rightpalm?",
+      "targetForce": [20.0, 0.0, 0.0],
       // Velocity control for the end-effector
       "rightEfStiffness": 0.0,
       "rightEfDamping": 300.0
@@ -161,5 +171,6 @@
   "init": "Prepare",
   "transitions": [
     [ "Prepare", "RightHandReady", "Contact", "Auto" ]
+    // [ "Contact", "ok", "Stabilize", "Auto" ]
   ]
 }

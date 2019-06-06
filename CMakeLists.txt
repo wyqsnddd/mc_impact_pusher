@@ -19,6 +19,7 @@ endmacro()
 
 add_state(PrepareHand)
 add_state(DynamicContact)
+#add_state(StabilizeContact)
 
 include_directories(mc_prediction)
 
