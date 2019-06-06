@@ -146,16 +146,16 @@ items:
           data: 
             modelFile: "${PROGRAM_TOP}/share/hrpsys/samples/environments/DRCTestbedButton.wrl"
             currentBaseLink: ""
-            rootPosition: [ 0.436063269, 0.0524995644, 0 ]
+            rootPosition: [ 0.436063269, 0.0524995644, -0.102227941 ]
             rootAttitude: [ 
-              -0.996820343, 0.0796818911, 0, 
-              -0.0796818911, -0.996820343, 0, 
+              -1, 3.21867533e-13, 0, 
+              -3.21867533e-13, -1, 0, 
               0, 0, 1 ]
             jointPositions: [  0.000000 ]
-            initialRootPosition: [ 0, -0.665, 0 ]
+            initialRootPosition: [ 0.436063269, 0.0524995644, -0.102227941 ]
             initialRootAttitude: [ 
-              1, 0, 0, 
-              0, 1, 0, 
+              -1, 3.21867533e-13, 0, 
+              -3.21867533e-13, -1, 0, 
               0, 0, 1 ]
             initialJointPositions: [  0.000000 ]
             zmp: [ 0, 0, 0 ]
@@ -176,12 +176,14 @@ views:
     id: 0
     plugin: Base
     class: ItemPropertyView
+    mounted: true
   - 
     id: 1
     plugin: Base
     class: ItemTreeView
     mounted: true
     state: 
+      selected: [ 8 ]
       checked: [ 2, 3, [ 4, "ForceSensor" ], 5, 7, 8 ]
       expanded: [ 1, 2, 3, 4, 6 ]
   - 
@@ -283,9 +285,9 @@ views:
           fieldOfView: 0.6978
           near: 0.01
           far: 10000
-          eye: [ 0.305518499, -2.50956258, 1.34252621 ]
-          direction: [ 0.0482033846, 0.978880448, -0.198669327 ]
-          up: [ 0.00977130961, 0.198428886, 0.980066579 ]
+          eye: [ -0.307766479, -2.38888412, 1.5748309 ]
+          direction: [ 0.205719161, 0.923404433, -0.324043022 ]
+          up: [ 0.0704639269, 0.316288974, 0.946042346 ]
         - 
           camera: [ System, Orthographic ]
           orthoHeight: 20
@@ -313,6 +315,7 @@ views:
     id: 8
     plugin: Body
     class: BodyLinkView
+    mounted: true
     state: 
       showRotationMatrix: false
   - 
@@ -358,6 +361,7 @@ views:
       slider: true
       dial: false
       labelOnLeft: true
+      currentBodyItem: 8
   - 
     id: 12
     name: "Joint State"
@@ -370,6 +374,7 @@ views:
     class: LinkSelectionView
     state: 
       listingMode: "Link List"
+      currentBodyItem: 8
       bodyItems: 
         - 
           id: 2
@@ -418,6 +423,8 @@ toolbars:
     snapDistance: 0.025
     penetrationBlockDepth: 0.0005
     lazyCollisionDetectionMode: true
+  "BodyBar": 
+    current: 8
   "LeggedBodyBar": 
     stanceWidth: 0.15
   "BodyMotionGenerationBar": 
@@ -500,20 +507,20 @@ viewAreas:
     contents: 
       type: splitter
       orientation: horizontal
-      sizes: [ 341, 1569 ]
+      sizes: [ 300, 1610 ]
       children: 
         - 
           type: splitter
           orientation: vertical
-          sizes: [ 459, 459 ]
+          sizes: [ 456, 462 ]
           children: 
             - 
               type: pane
-              views: [ 1, 12, 9 ]
+              views: [ 1, 12, 9, 8 ]
               current: 1
             - 
               type: pane
-              views: [ 2, 17 ]
+              views: [ 2, 17, 0 ]
               current: 2
         - 
           type: pane
