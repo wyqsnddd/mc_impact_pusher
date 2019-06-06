@@ -76,12 +76,12 @@ bool DynamicContactState::run(mc_control::fsm::Controller & ctlInput)
     // ctl.solver().removeTask(rPosTaskPtr_);
     // ctl.solver().removeTask(ctl.comTaskPtr);
 
-    if(ctl.config()("impact")("constraints")("zmpWithImpulse"))
+    if(ctl.config()("impact")("constraints")("zmpWithImpulse")("on"))
     {
       ctl.solver().removeConstraint(ctl.zmpImpulse_.get());
     }
 
-    if(ctl.config()("impact")("constraints")("copWithImpulse"))
+    if(ctl.config()("impact")("constraints")("copWithImpulse")("on"))
     {
       ctl.solver().removeConstraint(ctl.copImpulseLeftFoot_.get());
       ctl.solver().removeConstraint(ctl.copImpulseRightFoot_.get());
@@ -92,7 +92,7 @@ bool DynamicContactState::run(mc_control::fsm::Controller & ctlInput)
       ctl.solver().removeConstraint(ctl.frictionImpulseRightFoot_.get());
     }
 
-    if(ctl.config()("impact")("constraints")("jointTorque")){
+    if(ctl.config()("impact")("constraints")("jointTorque")("on")){
       ctl.solver().removeConstraint(ctl.boundTorqueJump_.get());
     }
 
