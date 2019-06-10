@@ -50,7 +50,7 @@ void DynamicContactState::start(mc_control::fsm::Controller & ctlInput)
   {
     rPosTaskPtr_->positionTask->damping(static_cast<double>(state_conf_("rightEfDamping")));
   }
-  ctl.miPredictorPtr->resetDataStructure();
+  //ctl.miPredictorPtr->resetDataStructure();
 
   run(ctlInput);
 }
@@ -59,13 +59,13 @@ bool DynamicContactState::run(mc_control::fsm::Controller & ctlInput)
 {
   auto & ctl = static_cast<Controller &>(ctlInput);
 
-  ctl.miOsdPtr->update();
+  //ctl.miOsdPtr->update();
   Eigen::Vector3d surfaceNormal;
   surfaceNormal << 1, 0, 0;
   // Convert surfaceNormal to the local frame of the right wrist.
   sva::PTransformd X_0_ee = ctl.robot().bodyPosW("r_wrist");
 
-  ctl.miPredictorPtr->run(X_0_ee.rotation() * surfaceNormal + X_0_ee.translation());
+  //ctl.miPredictorPtr->run(X_0_ee.rotation() * surfaceNormal + X_0_ee.translation());
 
   std::map<std::string, Eigen::Vector3d> surfaceNormals;
   surfaceNormals["r_wrist"] =  X_0_ee.rotation() * surfaceNormal + X_0_ee.translation();

@@ -43,9 +43,9 @@ struct Controller : public mc_control::fsm::Controller
 
   bool rArmInContact();
 
-  std::unique_ptr<mi_impactPredictor> miPredictorPtr;
+  //std::unique_ptr<mi_impactPredictor> miPredictorPtr;
   std::unique_ptr<mi_multiImpactPredictor> multiImpactPredictorPtr;
-  std::shared_ptr<mi_osd> miOsdPtr;
+  //std::shared_ptr<mi_osd> miOsdPtr;
 
   const mc_rbdyn::Contact & getContact(const std::string & s);
 
