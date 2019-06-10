@@ -364,6 +364,8 @@ bool PrepareHandState::run(mc_control::fsm::Controller & ctlInput)
   auto & ctl = static_cast<Controller &>(ctlInput);
   //std::cout << "PrepareState: the right ef error is: " << rEfTaskPtr_->eval().norm() << std::endl;
 
+  ctl.miOsdPtr->update();
+
   Eigen::Vector3d surfaceNormal;
   surfaceNormal << 1, 0, 0;
 
@@ -372,6 +374,10 @@ bool PrepareHandState::run(mc_control::fsm::Controller & ctlInput)
   sva::PTransformd X_0_ee = ctl.robot().bodyPosW("r_wrist");
   // ctl.miPredictorPtr->run(surfaceNormal);
   ctl.miPredictorPtr->run(X_0_ee.rotation() * surfaceNormal + X_0_ee.translation());
+
+  std::map<std::string, Eigen::Vector3d> surfaceNormals;
+  surfaceNormals["r_wrist"] =  X_0_ee.rotation() * surfaceNormal + X_0_ee.translation();
+  ctl.multiImpactPredictorPtr->run(surfaceNormals);
 
   if(rEfTaskPtr_->eval().norm() <= efThreshold_)
   {

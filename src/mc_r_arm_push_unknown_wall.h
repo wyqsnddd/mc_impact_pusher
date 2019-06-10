@@ -1,6 +1,8 @@
 #pragma once
 #include <mc_control/fsm/Controller.h>
 #include <mc_prediction/mi_impactPredictor.h>
+#include <mc_prediction/mi_multiImpactPredictor.h>
+
 #include <mc_rbdyn/RobotLoader.h>
 #include <mc_rbdyn/RobotModule.h>
 #include <mc_rbdyn/Robots.h>
@@ -42,6 +44,8 @@ struct Controller : public mc_control::fsm::Controller
   bool rArmInContact();
 
   std::unique_ptr<mi_impactPredictor> miPredictorPtr;
+  std::unique_ptr<mi_multiImpactPredictor> multiImpactPredictorPtr;
+  std::shared_ptr<mi_osd> miOsdPtr;
 
   const mc_rbdyn::Contact & getContact(const std::string & s);
 

@@ -77,18 +77,33 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
                     }));
 
   std::string impactBodyString(config()("impact")("estimation")("impactBodyName"));
+
+  miOsdPtr = std::make_shared<mi_osd>(robot(), true);
   miPredictorPtr.reset(new mi_impactPredictor(
-      robot(), impactBodyString, config()("impact")("estimation")("useLinearJacobian"),
+      robot(), miOsdPtr, impactBodyString, config()("impact")("estimation")("useLinearJacobian"),
+      timeStep, // This is the controller time step.
+      // solver().dt(),
+      // config()("impact")("estimation")("delta_dt"),
+      config()("impact")("estimation")("coeFrictionDeduction"), config()("impact")("estimation")("coeRestitution")));
+  std::vector<std::string> eeNameVector = config()("impact")("estimation")("end-effectors");
+
+  std::vector<std::string> impactBodies;
+  impactBodies.push_back(impactBodyString);
+multiImpactPredictorPtr.reset(new mi_multiImpactPredictor(
+      robot(), impactBodies, static_cast<int>(eeNameVector.size()),
       timeStep, // This is the controller time step.
       // solver().dt(),
       // config()("impact")("estimation")("delta_dt"),
       config()("impact")("estimation")("coeFrictionDeduction"), config()("impact")("estimation")("coeRestitution")));
 
-  std::vector<std::string> eeNameVector = config()("impact")("estimation")("end-effectors");
+std::cout<<"multiImpact predictor is created"<<std::endl;
 
+  miOsdPtr->initializeDataStructure(static_cast<int>(eeNameVector.size()));
   miPredictorPtr->initializeDataStructure(static_cast<int>(eeNameVector.size()));
+  multiImpactPredictorPtr->initializeDataStructure(static_cast<int>(eeNameVector.size())); 
+  miOsdPtr->resetDataStructure();
   miPredictorPtr->resetDataStructure();
-
+  multiImpactPredictorPtr->resetDataStructure();
   for(auto index = eeNameVector.begin(); index != eeNameVector.end(); ++index)
   {
 
@@ -104,12 +119,17 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
       std::cout << "End-effector: " << *index << "is added to the impact-predictor. " << std::endl;
     }
   }
-
+  multiImpactPredictorPtr->addEndeffectors(impactBodies, eeNameVector);
   std::cout << "Operational space dynamics Predictor is created." << std::endl;
 
   miPredictorPtr->setContact("l_sole");
   miPredictorPtr->setContact("r_sole");
 
+  std::vector<std::string> contactBodies;
+  contactBodies.push_back("l_sole");
+  contactBodies.push_back("r_sole");
+
+  multiImpactPredictorPtr->setContact(contactBodies);
   //----------------------------------- Jump on different branch:
   logger().addLogEntry("ee_Vel_impact_jump", [this]() {
     // Eigen::VectorXd eeVelJump =
@@ -873,7 +893,8 @@ bool Controller::run()
        std::vector<double> zmpVector = config()("impact")("constraints")("zmpWithImpulse")("supportPolygon");
 
        bool debug = config()("impact")("constraints")("zmpWithImpulse")("debug");
-       zmpImpulse_.reset(new mc_impact::zmpWithImpulse(*miPredictorPtr,
+       zmpImpulse_.reset(new mc_impact::zmpWithImpulse(//*miPredictorPtr,
+			       			       *(multiImpactPredictorPtr->getPredictor("r_wrist")),
                                                        supports,
                                                        timeStep, timeStep,
                                                        {zmpVector[0], zmpVector[1], zmpVector[2], zmpVector[3]}, /// This is the supportPolygon

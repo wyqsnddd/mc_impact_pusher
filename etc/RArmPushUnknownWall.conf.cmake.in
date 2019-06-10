@@ -134,7 +134,7 @@
     },
     "estimation": {
       "coeFrictionDeduction": 0.2,
-      "coeRestitution": 0.5,
+      "coeRestitution": 0.2,
       "delta_dt": 0.005,
       "useLinearJacobian": true,
       "impactBodyName": "r_wrist",
@@ -151,7 +151,7 @@
     "Contact":
     {
       "base": "DynamicContact", // C++ state
-      "contactVelocity" : [2.0, 0.0, 0.0], //
+      "contactVelocity" : [1.5, 0.0, 0.0], //
       "pushDepth":  [1.0, 0.0, 0.0], // Target position that should generate the impact
       // Velocity control for the end-effector
       "rightEfStiffness": 0.0,
