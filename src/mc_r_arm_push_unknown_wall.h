@@ -24,6 +24,7 @@ struct Controller : public mc_control::fsm::Controller
   bool run() override;
 
   std::shared_ptr<mc_tasks::MetaTask> comTaskPtr;
+
   std::unique_ptr<mc_impact::BoundJointTorqueJump> boundTorqueJump_;
   std::unique_ptr<mc_impact::BoundJointVelocityJump> boundVelocityJump_;
   std::unique_ptr<mc_impact::ZeroSlippageWithImpulse> zeroSlippageLeftFoot_;
@@ -35,6 +36,23 @@ struct Controller : public mc_control::fsm::Controller
   std::unique_ptr<mc_impact::copWithImpulse> copImpulseLeftFoot_;
   std::unique_ptr<mc_impact::copWithImpulse> copImpulseRightFoot_;
   std::unique_ptr<mc_impact::zmpWithImpulse> zmpImpulse_;
+
+
+  std::unique_ptr<mc_impact::BoundJointTorqueJump> left_boundTorqueJump_;
+  std::unique_ptr<mc_impact::BoundJointVelocityJump> left_boundVelocityJump_;
+
+  std::unique_ptr<mc_impact::ZeroSlippageWithImpulse> left_zeroSlippageLeftFoot_;
+  std::unique_ptr<mc_impact::ZeroSlippageWithImpulse> left_zeroSlippageRightFoot_;
+  std::unique_ptr<mc_impact::COPInsideContactAreaWithImpulse> left_COPImpulseLeftFoot_;
+  std::unique_ptr<mc_impact::COPInsideContactAreaWithImpulse> left_COPImpulseRightFoot_;
+  std::unique_ptr<mc_impact::frictionWithImpulse> left_frictionImpulseRightFoot_;
+  std::unique_ptr<mc_impact::frictionWithImpulse> left_frictionImpulseLeftFoot_;
+  std::unique_ptr<mc_impact::copWithImpulse> left_copImpulseLeftFoot_;
+  std::unique_ptr<mc_impact::copWithImpulse> left_copImpulseRightFoot_;
+  std::unique_ptr<mc_impact::zmpWithImpulse> left_zmpImpulse_;
+
+
+
 
   // Force sensor threshold
   double forceThreshold = 3.0;

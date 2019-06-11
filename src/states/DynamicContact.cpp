@@ -69,6 +69,16 @@ bool DynamicContactState::run(mc_control::fsm::Controller & ctlInput)
 
   std::map<std::string, Eigen::Vector3d> surfaceNormals;
   surfaceNormals["r_wrist"] =  X_0_ee.rotation() * surfaceNormal + X_0_ee.translation();
+
+  Eigen::Vector3d l_surfaceNormal;
+  l_surfaceNormal << 1, 0, 0;
+  // Convert surfaceNormal to the local frame of the right wrist.
+  sva::PTransformd X_0_lee = ctl.robot().bodyPosW("l_wrist");
+  surfaceNormals["l_wrist"] =  X_0_lee.rotation() * l_surfaceNormal + X_0_lee.translation();
+
+  //ctl.miPredictorPtr->run(X_0_ee.rotation() * surfaceNormal + X_0_ee.translation());
+
+
   ctl.multiImpactPredictorPtr->run(surfaceNormals);
 
 

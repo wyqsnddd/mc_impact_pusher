@@ -137,6 +137,8 @@
       "coeRestitution": 0.2,
       "delta_dt": 0.005,
       "useLinearJacobian": true,
+      "contactBodies": ["l_sole", "r_sole"],
+      "impactBodies": ["r_wrist", "l_wrist"],
       "impactBodyName": "r_wrist",
       "end-effectors": [ "l_sole", "r_sole", "l_wrist", "r_wrist"]
     }

@@ -89,8 +89,9 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
       */
   std::vector<std::string> eeNameVector = config()("impact")("estimation")("end-effectors");
 
-  std::vector<std::string> impactBodies;
-  impactBodies.push_back(impactBodyString);
+  std::vector<std::string> impactBodies = config()("impact")("estimation")("impactBodies");
+
+  //impactBodies.push_back(impactBodyString);
 multiImpactPredictorPtr.reset(new mi_multiImpactPredictor(
       robot(), impactBodies, static_cast<int>(eeNameVector.size()),
       timeStep, // This is the controller time step.
@@ -123,16 +124,18 @@ std::cout<<"multiImpact predictor is created"<<std::endl;
     }
   }
   */
+
   multiImpactPredictorPtr->addEndeffectors(impactBodies, eeNameVector);
   std::cout << "Operational space dynamics Predictor is created." << std::endl;
 /*
   multiImpactPredictorPtr->getPredictor("r_wrist")->setContact("l_sole");
   multiImpactPredictorPtr->getPredictor("r_wrist")->setContact("r_sole");
 */
-  std::vector<std::string> contactBodies;
-  contactBodies.push_back("l_sole");
-  contactBodies.push_back("r_sole");
+  //std::vector<std::string> contactBodies;
+  //contactBodies.push_back("l_sole");
+  //contactBodies.push_back("r_sole");
 
+  std::vector<std::string> contactBodies = config()("impact")("estimation")("contactBodies");
   multiImpactPredictorPtr->setContact(contactBodies);
   //----------------------------------- Jump on different branch:
   logger().addLogEntry("ee_Vel_impact_jump", [this]() {
@@ -935,12 +938,18 @@ bool Controller::run()
     {
       boundTorqueJump_.reset(new mc_impact::BoundJointTorqueJump(*multiImpactPredictorPtr->getPredictor("r_wrist"), timeStep, timeStep, config()("impact")("constraints")("jointTorque")("multiplier")));
       solver().addConstraint(boundTorqueJump_.get());
+      left_boundTorqueJump_.reset(new mc_impact::BoundJointTorqueJump(*multiImpactPredictorPtr->getPredictor("l_wrist"), timeStep, timeStep, config()("impact")("constraints")("jointTorque")("multiplier")));
+      solver().addConstraint(left_boundTorqueJump_.get());
+
     }
 
     if(config()("impact")("constraints")("jointVelocity"))
     {
       boundVelocityJump_.reset(new mc_impact::BoundJointVelocityJump(*multiImpactPredictorPtr->getPredictor("r_wrist"), timeStep));
       solver().addConstraint(boundVelocityJump_.get());
+      left_boundVelocityJump_.reset(new mc_impact::BoundJointVelocityJump(*multiImpactPredictorPtr->getPredictor("l_wrist"), timeStep));
+      solver().addConstraint(left_boundVelocityJump_.get());
+
     }
 
     if(config()("impact")("constraints")("SlippageLeft"))
