@@ -141,7 +141,7 @@
     },
     "estimation": {
       "coeFrictionDeduction": 0.2,
-      "coeRestitution": 0.2,
+      "coeRestitution": 0.8,
       "delta_dt": 0.005,
       "useLinearJacobian": true,
       "contactBodies": ["l_sole", "r_sole"],
