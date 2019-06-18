@@ -375,15 +375,30 @@ bool PrepareHandState::run(mc_control::fsm::Controller & ctlInput)
   // ctl.multiImpactPredictorPtr->getPredictor("r_wrist")->run(surfaceNormal);
   //ctl.multiImpactPredictorPtr->getPredictor("r_wrist")->run(X_0_ee.rotation() * surfaceNormal + X_0_ee.translation());
 
-  std::map<std::string, Eigen::Vector3d> surfaceNormals;
-  surfaceNormals["r_wrist"] =  X_0_ee.rotation() * surfaceNormal + X_0_ee.translation();
+  std::map<std::string, Eigen::Vector3d> impactSurfaceNormals;
+  impactSurfaceNormals["r_wrist"] =  X_0_ee.rotation() * surfaceNormal + X_0_ee.translation();
   Eigen::Vector3d l_surfaceNormal;
-  l_surfaceNormal << 1, 0, 0;
+  l_surfaceNormal << 0, 1, 0;
   // Convert surfaceNormal to the local frame of the right wrist.
   sva::PTransformd X_0_lee = ctl.robot().bodyPosW("l_wrist");
-  surfaceNormals["l_wrist"] =  X_0_lee.rotation() * l_surfaceNormal + X_0_lee.translation();
+  impactSurfaceNormals["l_wrist"] =  X_0_lee.rotation() * l_surfaceNormal + X_0_lee.translation();
 
-  ctl.multiImpactPredictorPtr->run(surfaceNormals);
+  ctl.multiImpactPredictorPtr->run(impactSurfaceNormals);
+  if (ctl.lcpSolverPtr->getDim() == 1){
+   std::map<std::string, Eigen::Vector3d> contactSurfaceNormals;
+  Eigen::Vector3d groundSurfaceNormal;
+  groundSurfaceNormal<< 0, 0, 1;
+
+  sva::PTransformd X_0_lSole = ctl.robot().bodyPosW("l_sole");
+  contactSurfaceNormals["l_sole"] =  X_0_lSole.rotation() *groundSurfaceNormal  + X_0_lSole.translation();
+  sva::PTransformd X_0_rSole = ctl.robot().bodyPosW("r_sole");
+  contactSurfaceNormals["r_sole"] =  X_0_rSole.rotation() *groundSurfaceNormal  + X_0_rSole.translation();
+
+  ctl.lcpSolverPtr->update(contactSurfaceNormals);
+
+  }else{
+   ctl.lcpSolverPtr->update();
+  }
 
   if(rEfTaskPtr_->eval().norm() <= efThreshold_)
   {

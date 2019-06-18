@@ -120,6 +120,13 @@
       "bound" : 0.1
     }
   },
+  "lcp":{
+   "solver": "nlopt::LD_CCSAQ",
+   "solver2": "nlopt::LD_MMA",
+   "solver3": "nlopt::LD_SLSQP",
+   "dim":3,
+   "convergenceThreshold":1e-2
+  },
   "impact": {
     "constraints": {
       "jointVelocity": true,

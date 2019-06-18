@@ -8,7 +8,7 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
   impactIndicator_ = -20.0;
   std::cout << "Kinematics and Dynamics constraints are created." << std::endl;
   solver().addConstraintSet(kinematicsConstraint);
-  // solver().addConstraintSet(dynamicsConstraint);
+  solver().addConstraintSet(dynamicsConstraint);
 
   logger().addLogEntry("CoP_LeftFoot_World", [this]() {
     auto & robot = this->realRobots().robot();
@@ -134,6 +134,10 @@ std::cout<<"multiImpact predictor is created"<<std::endl;
   //std::vector<std::string> contactBodies;
   //contactBodies.push_back("l_sole");
   //contactBodies.push_back("r_sole");
+
+  lcpSolverPtr.reset(new mi_lcp(robot(), multiImpactPredictorPtr->getOsd_(), config()("lcp")("dim"), config()("lcp")("solver"), config()("lcp")("convergenceThreshold") ) );
+  std::cout<<"lcp solver is created"<<std::endl;
+
 
   std::vector<std::string> contactBodies = config()("impact")("estimation")("contactBodies");
   multiImpactPredictorPtr->setContact(contactBodies);
@@ -511,6 +515,16 @@ logger().addLogEntry("COM_sum_predict_impulse", [this]() {
     tempZMP.z() = 0;
     return tempZMP;
   });
+  
+  //----------------------------- check the LCP estimated contact force  
+  
+  logger().addLogEntry("lcp_RightFootForce", [this]() {
+    return lcpSolverPtr->getPredictedContactForce("r_sole");
+    });
+  logger().addLogEntry("lcp_LeftFootForce", [this]() {
+    return lcpSolverPtr->getPredictedContactForce("l_sole");
+    });
+
   //----------------------------- check the impulsive joint torque
 
   logger().addLogEntry("test_delta_tau_upper", [this]() {
