@@ -136,6 +136,8 @@ std::cout<<"multiImpact predictor is created"<<std::endl;
   //contactBodies.push_back("r_sole");
 
   lcpSolverPtr.reset(new mi_lcp(robot(), multiImpactPredictorPtr->getOsd_(), config()("lcp")("dim"), config()("lcp")("solver"), config()("lcp")("convergenceThreshold") ) );
+  //lcpSolverPtr.reset(new mi_lcp(const_cast<mc_rbdyn::Robot&>(realRobots().robot()), multiImpactPredictorPtr->getOsd_(), config()("lcp")("dim"), config()("lcp")("solver"), config()("lcp")("convergenceThreshold") ) );
+  //lcpSolverPtr.reset(new mi_lcp(realRobots().robot(), multiImpactPredictorPtr->getOsd_(), config()("lcp")("dim"), config()("lcp")("solver"), config()("lcp")("convergenceThreshold") ) );
   std::cout<<"lcp solver is created"<<std::endl;
 
 
