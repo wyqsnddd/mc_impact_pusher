@@ -127,6 +127,7 @@ std::cout<<"multiImpact predictor is created"<<std::endl;
 
   multiImpactPredictorPtr->addEndeffectors(impactBodies, eeNameVector);
   std::cout << "Operational space dynamics Predictor is created." << std::endl;
+  //for (auto idx = eeNameVector.begin(); idx!=eeNameVector.end(); ++idx )
 /*
   multiImpactPredictorPtr->getPredictor("r_wrist")->setContact("l_sole");
   multiImpactPredictorPtr->getPredictor("r_wrist")->setContact("r_sole");
@@ -135,12 +136,7 @@ std::cout<<"multiImpact predictor is created"<<std::endl;
   //contactBodies.push_back("l_sole");
   //contactBodies.push_back("r_sole");
 
-  lcpSolverPtr.reset(new mi_lcp(robot(), multiImpactPredictorPtr->getOsd_(), config()("lcp")("dim"), config()("lcp")("solver"), config()("lcp")("convergenceThreshold") ) );
-  //lcpSolverPtr.reset(new mi_lcp(const_cast<mc_rbdyn::Robot&>(realRobots().robot()), multiImpactPredictorPtr->getOsd_(), config()("lcp")("dim"), config()("lcp")("solver"), config()("lcp")("convergenceThreshold") ) );
-  //lcpSolverPtr.reset(new mi_lcp(realRobots().robot(), multiImpactPredictorPtr->getOsd_(), config()("lcp")("dim"), config()("lcp")("solver"), config()("lcp")("convergenceThreshold") ) );
-  std::cout<<"lcp solver is created"<<std::endl;
-
-
+  
   std::vector<std::string> contactBodies = config()("impact")("estimation")("contactBodies");
   multiImpactPredictorPtr->setContact(contactBodies);
   //----------------------------------- Jump on different branch:
@@ -517,7 +513,87 @@ logger().addLogEntry("COM_sum_predict_impulse", [this]() {
     tempZMP.z() = 0;
     return tempZMP;
   });
+  //----------------------------- check the QP estimated contact force  
   
+  // -------------------------- QP estimator solved by Lagrange Multipliers 
+  logger().addLogEntry("qpec_RightFootForce", [this]() {
+    return ecqpEstimatorPtr->getEndeffector("r_sole").estimatedAverageImpulsiveForce;
+    });
+  logger().addLogEntry("qpec_LeftFootForce", [this]() {
+    return ecqpEstimatorPtr->getEndeffector("l_sole").estimatedAverageImpulsiveForce;
+    });
+  
+  logger().addLogEntry("qpec_LeftHandForce", [this]() {
+    return ecqpEstimatorPtr->getEndeffector("l_wrist").estimatedAverageImpulsiveForce;
+    });
+    
+  logger().addLogEntry("qpec_RightHandForce", [this]() {
+    return ecqpEstimatorPtr->getEndeffector("r_wrist").estimatedAverageImpulsiveForce;
+    });
+
+  logger().addLogEntry("qpec_RightHandForce", [this]() {
+    return ecqpEstimatorPtr->getEndeffector("r_wrist").estimatedAverageImpulsiveForce;
+    });
+
+  logger().addLogEntry("qpec_delta_q_dot", [this]() {
+    return ecqpEstimatorPtr->getJointVelJump();
+    });
+
+  logger().addLogEntry("qpec_delta_v_leftFoot", [this]() {
+    return ecqpEstimatorPtr->getEndeffector("l_sole").eeVJump;
+    });
+
+  logger().addLogEntry("qpec_delta_v_rightFoot", [this]() {
+    return ecqpEstimatorPtr->getEndeffector("r_sole").eeVJump;
+    });
+
+  logger().addLogEntry("qpec_delta_v_leftHand", [this]() {
+    return ecqpEstimatorPtr->getEndeffector("l_wrist").eeVJump;
+    });
+
+  logger().addLogEntry("qpec_delta_v_rightHand", [this]() {
+    return ecqpEstimatorPtr->getEndeffector("r_wrist").eeVJump;
+    });
+  // -------------------------- QP estimator solved by mini QP
+  logger().addLogEntry("qp_RightFootForce", [this]() {
+    return qpEstimatorPtr->getEndeffector("r_sole").estimatedAverageImpulsiveForce;
+    });
+  logger().addLogEntry("qp_LeftFootForce", [this]() {
+    return qpEstimatorPtr->getEndeffector("l_sole").estimatedAverageImpulsiveForce;
+    });
+  
+  logger().addLogEntry("qp_LeftHandForce", [this]() {
+    return qpEstimatorPtr->getEndeffector("l_wrist").estimatedAverageImpulsiveForce;
+    });
+    
+  logger().addLogEntry("qp_RightHandForce", [this]() {
+    return qpEstimatorPtr->getEndeffector("r_wrist").estimatedAverageImpulsiveForce;
+    });
+
+  logger().addLogEntry("qp_RightHandForce", [this]() {
+    return qpEstimatorPtr->getEndeffector("r_wrist").estimatedAverageImpulsiveForce;
+    });
+
+  logger().addLogEntry("qp_delta_q_dot", [this]() {
+    return qpEstimatorPtr->getJointVelJump();
+    });
+
+  logger().addLogEntry("qp_delta_v_leftFoot", [this]() {
+    return qpEstimatorPtr->getEndeffector("l_sole").eeVJump;
+    });
+
+  logger().addLogEntry("qp_delta_v_rightFoot", [this]() {
+    return qpEstimatorPtr->getEndeffector("r_sole").eeVJump;
+    });
+
+  logger().addLogEntry("qp_delta_v_leftHand", [this]() {
+    return qpEstimatorPtr->getEndeffector("l_wrist").eeVJump;
+    });
+
+  logger().addLogEntry("qp_delta_v_rightHand", [this]() {
+    return qpEstimatorPtr->getEndeffector("r_wrist").eeVJump;
+    });
+
   //----------------------------- check the LCP estimated contact force  
   
   logger().addLogEntry("lcp_RightFootForce", [this]() {
@@ -1002,6 +1078,47 @@ bool Controller::run()
 void Controller::reset(const mc_control::ControllerResetData & data)
 {
 
+  //lcpSolverPtr.reset(new mi_lcp(robot(), multiImpactPredictorPtr->getOsd_(), config()("lcp")("dim"), config()("lcp")("solver"), config()("lcp")("convergenceThreshold") ) );
+  lcpSolverPtr.reset(new mi_lcp(robot(), realRobots().robot(), multiImpactPredictorPtr->getOsd_(), config()("lcp")("dim"), config()("lcp")("solver"), config()("lcp")("convergenceThreshold") ) );
+  std::cout<<"lcp solver is created"<<std::endl;
+/*
+  qpEstimatorParameter qpParams{ 
+  .Qweight = config()("qpEstimator")("Qweight"),
+  .impactBodyName = config()("impact")("estimation")("impactBodyName"),
+  .impactDuration = config()("impact")("estimation")("delta_dt"),
+  .coeFrictionDeduction = config()("impact")("estimation")("coeFrictionDeduction"),
+  .coeRes = config()("impact")("estimation")("coeRestitution"),
+  .dim = config()("qpEstimator")("dim"),
+  }; 
+  */
+  qpEstimatorParameter qpParams; 
+  qpParams.Qweight = config()("qpEstimator")("Qweight");
+  qpParams.impactBodyName = std::string(config()("impact")("estimation")("impactBodyName"));
+  qpParams.impactDuration = config()("impact")("estimation")("delta_dt");
+  qpParams.coeFrictionDeduction = config()("impact")("estimation")("coeFrictionDeduction");
+  qpParams.coeRes = config()("impact")("estimation")("coeRestitution");
+  qpParams.dim = config()("qpEstimator")("dim");
+  qpParams.useLagrangeMultiplier= false; 
+
+  qpEstimatorPtr.reset(new mi_qpEstimator(robot(), multiImpactPredictorPtr->getOsd_(), qpParams ));
+
+  qpParams.useLagrangeMultiplier= true; 
+  
+  ecqpEstimatorPtr.reset(new mi_qpEstimator(robot(), multiImpactPredictorPtr->getOsd_(), qpParams ));
+  qpEstimatorPtr->print();
+  std::cout<<"qp solver is created"<<std::endl;
+  std::vector<std::string> eeNameVector = config()("impact")("estimation")("end-effectors");
+
+  for (auto idx = eeNameVector.begin(); idx!=eeNameVector.end(); ++idx )
+  {
+    qpEstimatorPtr->addEndeffector(*idx);
+    ecqpEstimatorPtr->addEndeffector(*idx);
+  }
+
+  std::cout << "QP impulse estimator has added the endeffectors." << std::endl;
+  //qpEstimatorPtr->initializeQP();
+
+
   /** First reset to get correct initial position of main robot */
   mc_control::MCController::reset(data);
 
@@ -1013,6 +1130,9 @@ void Controller::reset(const mc_control::ControllerResetData & data)
 
   /** Initialize FSM stuff */
   mc_control::fsm::Controller::reset(data);
+
+
+
 }
 
 const mc_rbdyn::Contact & Controller::getContact(const std::string & s)

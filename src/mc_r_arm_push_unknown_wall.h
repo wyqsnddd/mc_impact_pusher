@@ -3,6 +3,7 @@
 #include <mc_prediction/mi_impactPredictor.h>
 #include <mc_prediction/mi_multiImpactPredictor.h>
 #include <mc_prediction/mi_lcp.h>
+#include <mc_prediction/mi_qpEstimator.h>
 
 #include <mc_rbdyn/RobotLoader.h>
 #include <mc_rbdyn/RobotModule.h>
@@ -65,6 +66,8 @@ struct Controller : public mc_control::fsm::Controller
   //std::unique_ptr<mi_impactPredictor> miPredictorPtr;
   std::unique_ptr<mi_multiImpactPredictor> multiImpactPredictorPtr;
   std::unique_ptr<mi_lcp> lcpSolverPtr;
+  std::unique_ptr<mi_qpEstimator> qpEstimatorPtr;
+  std::unique_ptr<mi_qpEstimator> ecqpEstimatorPtr;
   //std::shared_ptr<mi_osd> miOsdPtr;
 
   const mc_rbdyn::Contact & getContact(const std::string & s);

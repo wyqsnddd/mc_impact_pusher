@@ -120,6 +120,13 @@
       "bound" : 0.1
     }
   },
+  "qpEstimator":{
+   "solverName": "nlopt::LD_CCSAQ",
+   "dim":3,
+   "Qweight":1,
+   "convergenceThreshold":1e-2,
+   "useLagrangeMultiplier": true
+  },
   "lcp":{
    "solver": "nlopt::LD_CCSAQ",
    "solver2": "nlopt::LD_MMA",

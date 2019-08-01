@@ -67,8 +67,10 @@ bool DynamicContactState::run(mc_control::fsm::Controller & ctlInput)
 
   //ctl.miPredictorPtr->run(X_0_ee.rotation() * surfaceNormal + X_0_ee.translation());
 
+  Eigen::Vector3d r_wrist_surfaceNormal =  X_0_ee.rotation() * surfaceNormal + X_0_ee.translation();
+
   std::map<std::string, Eigen::Vector3d> surfaceNormals;
-  surfaceNormals["r_wrist"] =  X_0_ee.rotation() * surfaceNormal + X_0_ee.translation();
+  surfaceNormals["r_wrist"] = r_wrist_surfaceNormal; 
 
   Eigen::Vector3d l_surfaceNormal;
   l_surfaceNormal << 0, 1, 0;
@@ -80,6 +82,10 @@ bool DynamicContactState::run(mc_control::fsm::Controller & ctlInput)
 
 
   ctl.multiImpactPredictorPtr->run(surfaceNormals);
+
+  ctl.qpEstimatorPtr->update(r_wrist_surfaceNormal);
+  ctl.ecqpEstimatorPtr->update(r_wrist_surfaceNormal);
+
   if(ctl.lcpSolverPtr->getDim()==1){
    std::map<std::string, Eigen::Vector3d> contactSurfaceNormals;
   Eigen::Vector3d groundSurfaceNormal;

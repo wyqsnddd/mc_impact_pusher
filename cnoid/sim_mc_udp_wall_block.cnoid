@@ -507,12 +507,12 @@ viewAreas:
     contents: 
       type: splitter
       orientation: horizontal
-      sizes: [ 300, 1610 ]
+      sizes: [ 290, 1559 ]
       children: 
         - 
           type: splitter
           orientation: vertical
-          sizes: [ 456, 462 ]
+          sizes: [ 492, 499 ]
           children: 
             - 
               type: pane

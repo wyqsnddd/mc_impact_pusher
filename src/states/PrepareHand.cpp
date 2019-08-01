@@ -376,7 +376,9 @@ bool PrepareHandState::run(mc_control::fsm::Controller & ctlInput)
   //ctl.multiImpactPredictorPtr->getPredictor("r_wrist")->run(X_0_ee.rotation() * surfaceNormal + X_0_ee.translation());
 
   std::map<std::string, Eigen::Vector3d> impactSurfaceNormals;
-  impactSurfaceNormals["r_wrist"] =  X_0_ee.rotation() * surfaceNormal + X_0_ee.translation();
+  Eigen::Vector3d r_wrist_surfaceNormal = X_0_ee.rotation() * surfaceNormal + X_0_ee.translation();
+
+  impactSurfaceNormals["r_wrist"] = r_wrist_surfaceNormal; 
   Eigen::Vector3d l_surfaceNormal;
   l_surfaceNormal << 0, 1, 0;
   // Convert surfaceNormal to the local frame of the right wrist.
@@ -399,6 +401,9 @@ bool PrepareHandState::run(mc_control::fsm::Controller & ctlInput)
   }else{
    ctl.lcpSolverPtr->update();
   }
+
+  ctl.qpEstimatorPtr->update(r_wrist_surfaceNormal);
+  ctl.ecqpEstimatorPtr->update(r_wrist_surfaceNormal);
 
   if(rEfTaskPtr_->eval().norm() <= efThreshold_)
   {
