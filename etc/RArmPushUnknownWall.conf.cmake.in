@@ -121,6 +121,7 @@
     }
   },
   "qpEstimator":{
+   "on": false,
    "solverName": "nlopt::LD_CCSAQ",
    "dim":3,
    "Qweight":1,
@@ -128,6 +129,7 @@
    "useLagrangeMultiplier": true
   },
   "lcp":{
+   "on": false,
    "solver": "nlopt::LD_CCSAQ",
    "solver2": "nlopt::LD_MMA",
    "solver3": "nlopt::LD_SLSQP",

@@ -386,6 +386,7 @@ bool PrepareHandState::run(mc_control::fsm::Controller & ctlInput)
   impactSurfaceNormals["l_wrist"] =  X_0_lee.rotation() * l_surfaceNormal + X_0_lee.translation();
 
   ctl.multiImpactPredictorPtr->run(impactSurfaceNormals);
+  if(ctl.config()("lcp")("on")){
   if (ctl.lcpSolverPtr->getDim() == 1){
    std::map<std::string, Eigen::Vector3d> contactSurfaceNormals;
   Eigen::Vector3d groundSurfaceNormal;
@@ -402,9 +403,12 @@ bool PrepareHandState::run(mc_control::fsm::Controller & ctlInput)
    ctl.lcpSolverPtr->update();
   }
 
-  ctl.qpEstimatorPtr->update(r_wrist_surfaceNormal);
-  ctl.ecqpEstimatorPtr->update(r_wrist_surfaceNormal);
-
+  }
+  
+  if(ctl.config()("qpEstimator")("on")){
+    ctl.qpEstimatorPtr->update(r_wrist_surfaceNormal);
+    ctl.ecqpEstimatorPtr->update(r_wrist_surfaceNormal);
+  }
   if(rEfTaskPtr_->eval().norm() <= efThreshold_)
   {
     // Output the transition signal such that we can move on according to the transitions

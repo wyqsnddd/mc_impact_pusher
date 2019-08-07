@@ -83,9 +83,12 @@ bool DynamicContactState::run(mc_control::fsm::Controller & ctlInput)
 
   ctl.multiImpactPredictorPtr->run(surfaceNormals);
 
-  ctl.qpEstimatorPtr->update(r_wrist_surfaceNormal);
-  ctl.ecqpEstimatorPtr->update(r_wrist_surfaceNormal);
+  if(ctl.config()("qpEstimator")("on")){
+    ctl.qpEstimatorPtr->update(r_wrist_surfaceNormal);
+    ctl.ecqpEstimatorPtr->update(r_wrist_surfaceNormal);
+  }
 
+  if(ctl.config()("lcp")("on")){
   if(ctl.lcpSolverPtr->getDim()==1){
    std::map<std::string, Eigen::Vector3d> contactSurfaceNormals;
   Eigen::Vector3d groundSurfaceNormal;
@@ -101,7 +104,7 @@ bool DynamicContactState::run(mc_control::fsm::Controller & ctlInput)
   }else{
    ctl.lcpSolverPtr->update();
   }
-
+  }
   if(ctl.rArmInContact() && !removedConstraint_)
   {
     LOG_SUCCESS("Contact Detected, stoping DynamicContactState");
