@@ -181,10 +181,10 @@ std::cout<<"multiImpact predictor is created"<<std::endl;
     return multiImpactPredictorPtr->getPredictor("r_wrist")->getEeVelocityJump();
   });
   logger().addLogEntry("ee_Vel_real", [this]() {
-    return realRobots().robot().mbc().bodyVelW[realRobots().robot().mb().bodyIndexByName("r_wrist")];
+    return realRobots().robot().mbc().bodyVelB[realRobots().robot().mb().bodyIndexByName("r_wrist")];
   });
   logger().addLogEntry("ee_Vel_qp", [this]() {
-    return robot().mbc().bodyVelW[robot().mb().bodyIndexByName("r_wrist")];
+    return robot().mbc().bodyVelB[robot().mb().bodyIndexByName("r_wrist")];
   });
   logger().addLogEntry("ee_contact_vel_norm", [this]() {
     Eigen::Vector3d surfaceNormal;
@@ -192,7 +192,7 @@ std::cout<<"multiImpact predictor is created"<<std::endl;
     sva::PTransformd X_0_ee = robot().bodyPosW("r_wrist");
     surfaceNormal = X_0_ee.rotation() * surfaceNormal + X_0_ee.translation();
     Eigen::Matrix3d tempProjector = surfaceNormal * surfaceNormal.transpose();
-    return (tempProjector*(realRobots().robot().mbc().bodyVelW[realRobots().robot().mb().bodyIndexByName("r_wrist")].linear())).norm();
+    return (tempProjector*(realRobots().robot().mbc().bodyVelB[realRobots().robot().mb().bodyIndexByName("r_wrist")].linear())).norm();
   });
 
 
@@ -202,7 +202,7 @@ std::cout<<"multiImpact predictor is created"<<std::endl;
   logger().addLogEntry("l_ankle_Vel_impact_jump", [this]() { return multiImpactPredictorPtr->getPredictor("r_wrist")->getEeVelocityJump("l_sole"); });
 
   logger().addLogEntry("l_ankle_Vel", [this]() {
-    return realRobots().robot().mbc().bodyVelW[realRobots().robot().mb().bodyIndexByName("l_sole")].linear();
+    return realRobots().robot().mbc().bodyVelB[realRobots().robot().mb().bodyIndexByName("l_sole")].linear();
   });
 
   logger().addLogEntry("l_ankle_dq", [this]() { return multiImpactPredictorPtr->getPredictor("r_wrist")->getBranchJointVelJump("l_sole"); });
@@ -211,7 +211,7 @@ std::cout<<"multiImpact predictor is created"<<std::endl;
   logger().addLogEntry("r_ankle_Vel_impact_jump", [this]() { return multiImpactPredictorPtr->getPredictor("r_wrist")->getEeVelocityJump("r_sole"); });
 
   logger().addLogEntry("r_ankle_Vel", [this]() {
-    return realRobots().robot().mbc().bodyVelW[realRobots().robot().mb().bodyIndexByName("r_sole")].linear();
+    return realRobots().robot().mbc().bodyVelB[realRobots().robot().mb().bodyIndexByName("r_sole")].linear();
   });
 
   logger().addLogEntry("r_ankle_dq", [this]() { return multiImpactPredictorPtr->getPredictor("r_wrist")->getBranchJointVelJump("r_sole"); });
