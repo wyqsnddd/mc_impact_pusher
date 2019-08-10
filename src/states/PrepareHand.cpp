@@ -129,9 +129,9 @@ void PrepareHandState::start(mc_control::fsm::Controller & ctlInput)
     ctl.zmpImpulse_->getComItems(sumJac, sumWrench);
     Eigen::VectorXd temp =
         (rbd::dofToVector(ctl.robot().mb(), ctl.robot().mbc().alpha)
-         + rbd::dofToVector(ctl.robot().mb(), ctl.robot().mbc().alphaD) * ctl.multiImpactPredictorPtr->getPredictor("r_wrist")->getImpactDuration_());
+         + rbd::dofToVector(ctl.robot().mb(), ctl.robot().mbc().alphaD) * ctl.multiImpactPredictorPtr->getPredictor("r_wrist")->());
 
-    Eigen::VectorXd result = (1/ctl.multiImpactPredictorPtr->getPredictor("r_wrist")->getImpactDuration_())*sumJac*temp; 
+    Eigen::VectorXd result = (1/ctl.multiImpactPredictorPtr->getPredictor("r_wrist")->())*sumJac*temp; 
 
     double denominator = ( sumWrench(5) + result(5));
 
@@ -377,14 +377,16 @@ bool PrepareHandState::run(mc_control::fsm::Controller & ctlInput)
 
   std::map<std::string, Eigen::Vector3d> impactSurfaceNormals;
   Eigen::Vector3d r_wrist_surfaceNormal = X_0_ee.rotation() * surfaceNormal + X_0_ee.translation();
-
+  // Then we need to rotate it to the body frame orientation. 
+  r_wrist_surfaceNormal = X_0_ee.rotation().transpose()*r_wrist_surfaceNormal; 
   impactSurfaceNormals["r_wrist"] = r_wrist_surfaceNormal; 
+  /*
   Eigen::Vector3d l_surfaceNormal;
   l_surfaceNormal << 0, 1, 0;
   // Convert surfaceNormal to the local frame of the right wrist.
   sva::PTransformd X_0_lee = ctl.robot().bodyPosW("l_wrist");
   impactSurfaceNormals["l_wrist"] =  X_0_lee.rotation() * l_surfaceNormal + X_0_lee.translation();
-
+*/
   ctl.multiImpactPredictorPtr->run(impactSurfaceNormals);
   if(ctl.config()("lcp")("on")){
   if (ctl.lcpSolverPtr->getDim() == 1){
@@ -407,7 +409,9 @@ bool PrepareHandState::run(mc_control::fsm::Controller & ctlInput)
   
   if(ctl.config()("qpEstimator")("on")){
     ctl.qpEstimatorPtr->update(r_wrist_surfaceNormal);
-    ctl.ecqpEstimatorPtr->update(r_wrist_surfaceNormal);
+    ctl.osdQpEstimatorPtr->update(r_wrist_surfaceNormal);
+    ctl.jsdQpEstimatorPtr->update(r_wrist_surfaceNormal);
+    ctl.ecQpEstimatorPtr->update(r_wrist_surfaceNormal);
   }
   if(rEfTaskPtr_->eval().norm() <= efThreshold_)
   {

@@ -121,7 +121,7 @@
     }
   },
   "qpEstimator":{
-   "on": false,
+   "on": true,
    "solverName": "nlopt::LD_CCSAQ",
    "dim":3,
    "Qweight":1,
@@ -146,17 +146,20 @@
       "SlippageRight": false,
       "frictionWithImpulse": true,
       "copWithImpulse": {"on": true, "contactArea": [-0.09, 0.09, -0.05, 0.05]},
-      "zmpWithImpulse": {"on": true, "supportPolygon": [-0.08, 0.08, -0.12, 0.12], "debug": true}
+      "zmpWithImpulse": {"on": false, "supportPolygon": [-0.08, 0.08, -0.12, 0.12], "debug": true}
     },
     "estimation": {
       "coeFrictionDeduction": 0.2,
-      "coeRestitution": 0.8,
+      "coeRestitution": 0.3,
+      "delta_dt-old": 0.005,
       "delta_dt": 0.005,
       "useLinearJacobian": true,
       "contactBodies": ["l_sole", "r_sole"],
-      "impactBodies": ["r_wrist", "l_wrist"],
+      "impactBodies": ["r_wrist"],
+      "impactBodies-old": ["r_wrist", "l_wrist"],
       "impactBodyName": "r_wrist",
-      "end-effectors": [ "l_sole", "r_sole", "l_wrist", "r_wrist"]
+      "end-effectors-back": [ "l_sole", "r_sole", "l_wrist", "r_wrist"],
+      "end-effectors": [ "l_sole", "r_sole", "r_wrist"]
     }
   },
   "states": {
@@ -169,7 +172,7 @@
     "Contact":
     {
       "base": "DynamicContact", // C++ state
-      "contactVelocity" : [1.5, 0.0, 0.0], //
+      "contactVelocity" : [0.8, 0.0, 0.0], //
       "pushDepth":  [1.0, 0.0, 0.0], // Target position that should generate the impact
       // Velocity control for the end-effector
       "rightEfStiffness": 0.0,

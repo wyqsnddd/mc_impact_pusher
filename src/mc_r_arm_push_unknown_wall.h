@@ -67,7 +67,9 @@ struct Controller : public mc_control::fsm::Controller
   std::unique_ptr<mi_multiImpactPredictor> multiImpactPredictorPtr;
   std::unique_ptr<mi_lcp> lcpSolverPtr;
   std::unique_ptr<mi_qpEstimator> qpEstimatorPtr;
-  std::unique_ptr<mi_qpEstimator> ecqpEstimatorPtr;
+  std::unique_ptr<mi_qpEstimator> jsdQpEstimatorPtr;
+  std::unique_ptr<mi_qpEstimator> osdQpEstimatorPtr;
+  std::unique_ptr<mi_qpEstimator> ecQpEstimatorPtr;
   //std::shared_ptr<mi_osd> miOsdPtr;
 
   const mc_rbdyn::Contact & getContact(const std::string & s);

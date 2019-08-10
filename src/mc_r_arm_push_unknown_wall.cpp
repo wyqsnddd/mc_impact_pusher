@@ -92,14 +92,15 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
   std::vector<std::string> impactBodies = config()("impact")("estimation")("impactBodies");
 
   //impactBodies.push_back(impactBodyString);
-multiImpactPredictorPtr.reset(new mi_multiImpactPredictor(
+  multiImpactPredictorPtr.reset(new mi_multiImpactPredictor(
       robot(), impactBodies, static_cast<int>(eeNameVector.size()),
-      timeStep, // This is the controller time step.
+      config()("impact")("estimation")("delta_dt"),
+      //timeStep, // This is the controller time step.
       // solver().dt(),
       // config()("impact")("estimation")("delta_dt"),
       config()("impact")("estimation")("coeFrictionDeduction"), config()("impact")("estimation")("coeRestitution")));
 
-std::cout<<"multiImpact predictor is created"<<std::endl;
+  std::cout<<"multiImpact predictor is created"<<std::endl;
 
   //miOsdPtr->initializeDataStructure(static_cast<int>(eeNameVector.size()));
   //multiImpactPredictorPtr->getPredictor("r_wrist")->initializeDataStructure(static_cast<int>(eeNameVector.size()));
@@ -150,27 +151,27 @@ std::cout<<"multiImpact predictor is created"<<std::endl;
   logger().addLogEntry("test_ee_Jacobian_f", [this]() {
     Eigen::VectorXd temp =
         (rbd::dofToVector(robot().mb(), robot().mbc().alpha)
-         + rbd::dofToVector(robot().mb(), robot().mbc().alphaD) * multiImpactPredictorPtr->getPredictor("r_wrist")->getImpactDuration_());
+         + rbd::dofToVector(robot().mb(), robot().mbc().alphaD) * multiImpactPredictorPtr->getPredictor("r_wrist")->getImpactDuration());
     Eigen::Vector3d delta_f =
-        ((1 / multiImpactPredictorPtr->getPredictor("r_wrist")->getImpactDuration_()) * multiImpactPredictorPtr->getPredictor("r_wrist")->getJacobianDeltaF("r_wrist") * temp);
+        ((1 / multiImpactPredictorPtr->getPredictor("r_wrist")->getImpactDuration()) * multiImpactPredictorPtr->getPredictor("r_wrist")->getJacobianDeltaF("r_wrist") * temp);
 
     return delta_f;
   });
   logger().addLogEntry("test_left_Jacobian_f", [this]() {
     Eigen::VectorXd temp =
         (rbd::dofToVector(robot().mb(), robot().mbc().alpha)
-         + rbd::dofToVector(robot().mb(), robot().mbc().alphaD) * multiImpactPredictorPtr->getPredictor("r_wrist")->getImpactDuration_());
+         + rbd::dofToVector(robot().mb(), robot().mbc().alphaD) * multiImpactPredictorPtr->getPredictor("r_wrist")->getImpactDuration());
     Eigen::Vector3d delta_f =
-        ((1 / multiImpactPredictorPtr->getPredictor("r_wrist")->getImpactDuration_()) * multiImpactPredictorPtr->getPredictor("r_wrist")->getJacobianDeltaF("l_sole") * temp);
+        ((1 / multiImpactPredictorPtr->getPredictor("r_wrist")->getImpactDuration()) * multiImpactPredictorPtr->getPredictor("r_wrist")->getJacobianDeltaF("l_sole") * temp);
 
     return delta_f;
   });
   logger().addLogEntry("test_right_Jacobian_f", [this]() {
     Eigen::VectorXd temp =
         (rbd::dofToVector(robot().mb(), robot().mbc().alpha)
-         + rbd::dofToVector(robot().mb(), robot().mbc().alphaD) * multiImpactPredictorPtr->getPredictor("r_wrist")->getImpactDuration_());
+         + rbd::dofToVector(robot().mb(), robot().mbc().alphaD) * multiImpactPredictorPtr->getPredictor("r_wrist")->getImpactDuration());
     Eigen::Vector3d delta_f =
-        ((1 / multiImpactPredictorPtr->getPredictor("r_wrist")->getImpactDuration_()) * multiImpactPredictorPtr->getPredictor("r_wrist")->getJacobianDeltaF("r_sole") * temp);
+        ((1 / multiImpactPredictorPtr->getPredictor("r_wrist")->getImpactDuration()) * multiImpactPredictorPtr->getPredictor("r_wrist")->getJacobianDeltaF("r_sole") * temp);
 
     return delta_f;
   });
@@ -183,6 +184,10 @@ std::cout<<"multiImpact predictor is created"<<std::endl;
   logger().addLogEntry("ee_Vel_real", [this]() {
     return realRobots().robot().mbc().bodyVelB[realRobots().robot().mb().bodyIndexByName("r_wrist")];
   });
+  logger().addLogEntry("ee_Vel_robot", [this]() {
+    return robot().mbc().bodyVelB[robot().mb().bodyIndexByName("r_wrist")];
+  });
+
   logger().addLogEntry("ee_Vel_qp", [this]() {
     return robot().mbc().bodyVelB[robot().mb().bodyIndexByName("r_wrist")];
   });
@@ -192,7 +197,7 @@ std::cout<<"multiImpact predictor is created"<<std::endl;
     sva::PTransformd X_0_ee = robot().bodyPosW("r_wrist");
     surfaceNormal = X_0_ee.rotation() * surfaceNormal + X_0_ee.translation();
     Eigen::Matrix3d tempProjector = surfaceNormal * surfaceNormal.transpose();
-    return (tempProjector*(realRobots().robot().mbc().bodyVelB[realRobots().robot().mb().bodyIndexByName("r_wrist")].linear())).norm();
+    return (tempProjector*(robot().mbc().bodyVelB[robot().mb().bodyIndexByName("r_wrist")].linear())).norm();
   });
 
 
@@ -201,7 +206,11 @@ std::cout<<"multiImpact predictor is created"<<std::endl;
 
   logger().addLogEntry("l_ankle_Vel_impact_jump", [this]() { return multiImpactPredictorPtr->getPredictor("r_wrist")->getEeVelocityJump("l_sole"); });
 
-  logger().addLogEntry("l_ankle_Vel", [this]() {
+  logger().addLogEntry("l_ankle_Vel_robot", [this]() {
+    return robot().mbc().bodyVelB[robot().mb().bodyIndexByName("l_sole")].linear();
+  });
+
+  logger().addLogEntry("l_ankle_Vel_real", [this]() {
     return realRobots().robot().mbc().bodyVelB[realRobots().robot().mb().bodyIndexByName("l_sole")].linear();
   });
 
@@ -210,7 +219,11 @@ std::cout<<"multiImpact predictor is created"<<std::endl;
 
   logger().addLogEntry("r_ankle_Vel_impact_jump", [this]() { return multiImpactPredictorPtr->getPredictor("r_wrist")->getEeVelocityJump("r_sole"); });
 
-  logger().addLogEntry("r_ankle_Vel", [this]() {
+  logger().addLogEntry("r_ankle_Vel_robot", [this]() {
+    return robot().mbc().bodyVelB[robot().mb().bodyIndexByName("r_sole")].linear();
+  });
+
+  logger().addLogEntry("r_ankle_Vel_real", [this]() {
     return realRobots().robot().mbc().bodyVelB[realRobots().robot().mb().bodyIndexByName("r_sole")].linear();
   });
 
@@ -351,15 +364,15 @@ logger().addLogEntry("COM_sum_predict_impulse", [this]() {
   logger().addLogEntry("test_delta_tau_jacobian", [this]() {
     Eigen::VectorXd temp =
         (rbd::dofToVector(robot().mb(), robot().mbc().alpha)
-         + rbd::dofToVector(robot().mb(), robot().mbc().alphaD) * multiImpactPredictorPtr->getPredictor("r_wrist")->getImpactDuration_());
-    return ((1 / multiImpactPredictorPtr->getPredictor("r_wrist")->getImpactDuration_()) * multiImpactPredictorPtr->getPredictor("r_wrist")->getJacobianDeltaTau() * temp).norm();
+         + rbd::dofToVector(robot().mb(), robot().mbc().alphaD) * multiImpactPredictorPtr->getPredictor("r_wrist")->getImpactDuration());
+    return ((1 / multiImpactPredictorPtr->getPredictor("r_wrist")->getImpactDuration()) * multiImpactPredictorPtr->getPredictor("r_wrist")->getJacobianDeltaTau() * temp).norm();
   });
 
   logger().addLogEntry("diff_delta_tau", [this]() {
     Eigen::VectorXd temp =
         (rbd::dofToVector(robot().mb(), robot().mbc().alpha)
-         + rbd::dofToVector(robot().mb(), robot().mbc().alphaD) * multiImpactPredictorPtr->getPredictor("r_wrist")->getImpactDuration_());
-    return ((1 / multiImpactPredictorPtr->getPredictor("r_wrist")->getImpactDuration_()) * multiImpactPredictorPtr->getPredictor("r_wrist")->getJacobianDeltaTau() * temp
+         + rbd::dofToVector(robot().mb(), robot().mbc().alphaD) * multiImpactPredictorPtr->getPredictor("r_wrist")->getImpactDuration());
+    return ((1 / multiImpactPredictorPtr->getPredictor("r_wrist")->getImpactDuration()) * multiImpactPredictorPtr->getPredictor("r_wrist")->getJacobianDeltaTau() * temp
             - rbd::dofToVector(robot().mb(), robot().mbc().jointTorque))
         .norm();
   });
@@ -369,7 +382,7 @@ logger().addLogEntry("COM_sum_predict_impulse", [this]() {
   logger().addLogEntry("diff_delta_alpha", [this]() {
     Eigen::VectorXd temp =
         (rbd::dofToVector(robot().mb(), robot().mbc().alpha)
-         + rbd::dofToVector(robot().mb(), robot().mbc().alphaD) * multiImpactPredictorPtr->getPredictor("r_wrist")->getImpactDuration_());
+         + rbd::dofToVector(robot().mb(), robot().mbc().alphaD) * multiImpactPredictorPtr->getPredictor("r_wrist")->getImpactDuration());
     return (multiImpactPredictorPtr->getPredictor("r_wrist")->getJacobianDeltaAlpha() * temp - multiImpactPredictorPtr->getPredictor("r_wrist")->getJointVelocityJump()).norm();
   });
 
@@ -396,7 +409,7 @@ logger().addLogEntry("COM_sum_predict_impulse", [this]() {
         - rbd::dofToVector(robot().mb(), robot().mbc().alpha);
     Eigen::VectorXd middle =
         multiImpactPredictorPtr->getPredictor("r_wrist")->getJacobianDeltaAlpha() * rbd::dofToVector(robot().mb(), robot().mbc().alphaD) * timeStep;
-    //* multiImpactPredictorPtr->getPredictor("r_wrist")->getImpactDuration_();
+    //* multiImpactPredictorPtr->getPredictor("r_wrist")->getImpactDuration();
     Eigen::VectorXd result = upper - middle;
     return result;
   });
@@ -408,7 +421,7 @@ logger().addLogEntry("COM_sum_predict_impulse", [this]() {
 
     Eigen::VectorXd middle =
         multiImpactPredictorPtr->getPredictor("r_wrist")->getJacobianDeltaAlpha() * rbd::dofToVector(robot().mb(), robot().mbc().alphaD) * timeStep;
-    // * multiImpactPredictorPtr->getPredictor("r_wrist")->getImpactDuration_();
+    // * multiImpactPredictorPtr->getPredictor("r_wrist")->getImpactDuration();
     Eigen::VectorXd result = middle - lower;
     return result;
   });
@@ -430,7 +443,7 @@ logger().addLogEntry("COM_sum_predict_impulse", [this]() {
   logger().addLogEntry("test_delta_q_vel_middle", [this]() {
     Eigen::VectorXd middle = multiImpactPredictorPtr->getPredictor("r_wrist")->getJacobianDeltaAlpha()
                              * rbd::dofToVector(robot().mb(), robot().mbc().alphaD)
-                             * multiImpactPredictorPtr->getPredictor("r_wrist")->getImpactDuration_();
+                             * multiImpactPredictorPtr->getPredictor("r_wrist")->getImpactDuration();
     return middle;
   });
 
@@ -516,45 +529,185 @@ logger().addLogEntry("COM_sum_predict_impulse", [this]() {
   //----------------------------- check the QP estimated contact force  
   
   // -------------------------- QP estimator solved by Lagrange Multipliers 
-  if(config()("qpEstimator")("on")){
-  logger().addLogEntry("qpec_RightFootForce", [this]() {
-    return ecqpEstimatorPtr->getEndeffector("r_sole").estimatedAverageImpulsiveForce;
-    });
-  logger().addLogEntry("qpec_LeftFootForce", [this]() {
-    return ecqpEstimatorPtr->getEndeffector("l_sole").estimatedAverageImpulsiveForce;
-    });
   
-  logger().addLogEntry("qpec_LeftHandForce", [this]() {
-    return ecqpEstimatorPtr->getEndeffector("l_wrist").estimatedAverageImpulsiveForce;
+  if(config()("qpEstimator")("on")){
+  
+
+  logger().addLogEntry("qpOsd_RightFootForce", [this]() {
+    return osdQpEstimatorPtr->getEndeffector("r_sole").estimatedAverageImpulsiveForce;
     });
-    
-  logger().addLogEntry("qpec_RightHandForce", [this]() {
-    return ecqpEstimatorPtr->getEndeffector("r_wrist").estimatedAverageImpulsiveForce;
+  logger().addLogEntry("qpOsd_LeftFootForce", [this]() {
+    return osdQpEstimatorPtr->getEndeffector("l_sole").estimatedAverageImpulsiveForce;
+    });
+  logger().addLogEntry("qpOsd_RightHandForce", [this]() {
+    return osdQpEstimatorPtr->getEndeffector("r_wrist").estimatedAverageImpulsiveForce;
+    });
+  logger().addLogEntry("qpOsd_delta_q_dot", [this]() {
+    return osdQpEstimatorPtr->getJointVelJump();
+    });
+  logger().addLogEntry("qpOsd_delta_tau", [this]() {
+    return osdQpEstimatorPtr->getTauJump();
     });
 
-  logger().addLogEntry("qpec_RightHandForce", [this]() {
-    return ecqpEstimatorPtr->getEndeffector("r_wrist").estimatedAverageImpulsiveForce;
+
+  logger().addLogEntry("qpOsd_delta_v_leftFoot", [this]() {
+    return osdQpEstimatorPtr->getEndeffector("l_sole").eeVJump;
     });
 
-  logger().addLogEntry("qpec_delta_q_dot", [this]() {
-    return ecqpEstimatorPtr->getJointVelJump();
+  logger().addLogEntry("qpOsd_delta_v_rightFoot", [this]() {
+    return osdQpEstimatorPtr->getEndeffector("r_sole").eeVJump;
+    });
+  logger().addLogEntry("qpOsd_delta_v_rightHand", [this]() {
+    return osdQpEstimatorPtr->getEndeffector("r_wrist").eeVJump;
     });
 
-  logger().addLogEntry("qpec_delta_v_leftFoot", [this]() {
-    return ecqpEstimatorPtr->getEndeffector("l_sole").eeVJump;
+  logger().addLogEntry("qpJsd_RightFootForce", [this]() {
+    return jsdQpEstimatorPtr->getEndeffector("r_sole").estimatedAverageImpulsiveForce;
+    });
+  logger().addLogEntry("qpJsd_LeftFootForce", [this]() {
+    return jsdQpEstimatorPtr->getEndeffector("l_sole").estimatedAverageImpulsiveForce;
+    });
+  logger().addLogEntry("qpJsd_RightHandForce", [this]() {
+    return jsdQpEstimatorPtr->getEndeffector("r_wrist").estimatedAverageImpulsiveForce;
+    });
+  logger().addLogEntry("qpJsd_delta_q_dot", [this]() {
+    return jsdQpEstimatorPtr->getJointVelJump();
+    });
+  logger().addLogEntry("qpJsd_delta_tau", [this]() {
+    return jsdQpEstimatorPtr->getTauJump();
     });
 
-  logger().addLogEntry("qpec_delta_v_rightFoot", [this]() {
-    return ecqpEstimatorPtr->getEndeffector("r_sole").eeVJump;
+
+  logger().addLogEntry("qpJsd_delta_v_leftFoot", [this]() {
+    return jsdQpEstimatorPtr->getEndeffector("l_sole").eeVJump;
     });
 
-  logger().addLogEntry("qpec_delta_v_leftHand", [this]() {
-    return ecqpEstimatorPtr->getEndeffector("l_wrist").eeVJump;
+  logger().addLogEntry("qpJsd_delta_v_rightFoot", [this]() {
+    return jsdQpEstimatorPtr->getEndeffector("r_sole").eeVJump;
+    });
+  logger().addLogEntry("qpJsd_delta_v_rightHand", [this]() {
+    return jsdQpEstimatorPtr->getEndeffector("r_wrist").eeVJump;
+    });
+  logger().addLogEntry("qpEc_check_RightFootForce", [this]() {
+    return ecQpEstimatorPtr->getEndeffector("r_sole").checkForce;
+    });
+  logger().addLogEntry("qpEc_check_LeftFootForce", [this]() {
+    return ecQpEstimatorPtr->getEndeffector("l_sole").checkForce;
+    });
+  logger().addLogEntry("qpEc_check_RightHandForce", [this]() {
+    return ecQpEstimatorPtr->getEndeffector("r_wrist").checkForce;
     });
 
-  logger().addLogEntry("qpec_delta_v_rightHand", [this]() {
-    return ecqpEstimatorPtr->getEndeffector("r_wrist").eeVJump;
+  logger().addLogEntry("qpEc_RightFootForce", [this]() {
+    return ecQpEstimatorPtr->getEndeffector("r_sole").estimatedAverageImpulsiveForce;
     });
+  logger().addLogEntry("qpEc_LeftFootForce", [this]() {
+    return ecQpEstimatorPtr->getEndeffector("l_sole").estimatedAverageImpulsiveForce;
+    });
+  logger().addLogEntry("qpEc_RightHandForce", [this]() {
+    return ecQpEstimatorPtr->getEndeffector("r_wrist").estimatedAverageImpulsiveForce;
+    });
+  logger().addLogEntry("qpEc_delta_q_dot", [this]() {
+    return ecQpEstimatorPtr->getJointVelJump();
+    });
+  logger().addLogEntry("qpEc_delta_tau", [this]() {
+    return ecQpEstimatorPtr->getTauJump();
+    });
+
+
+  logger().addLogEntry("qpEc_delta_v_leftFoot", [this]() {
+    return ecQpEstimatorPtr->getEndeffector("l_sole").eeVJump;
+    });
+
+  logger().addLogEntry("qpEc_delta_v_rightFoot", [this]() {
+    return ecQpEstimatorPtr->getEndeffector("r_sole").eeVJump;
+    });
+  logger().addLogEntry("qpEc_delta_v_rightHand", [this]() {
+    return ecQpEstimatorPtr->getEndeffector("r_wrist").eeVJump;
+    });
+
+
+  // test the qpestimator Jacobians:  
+  
+  //ecQpEstimatorPtr 
+  logger().addLogEntry("qpEc_compare_delta_dq", [this]() {
+    Eigen::VectorXd temp =
+        rbd::dofToVector(robot().mb(), robot().mbc().alpha)
+         + rbd::dofToVector(robot().mb(), robot().mbc().alphaD) *timeStep;
+
+    return (ecQpEstimatorPtr->getJointVelJump() - ecQpEstimatorPtr->getJacobianDeltaAlpha()*temp).norm();
+  });
+
+  logger().addLogEntry("qpEc_compare_RightFootForce", [this]() {
+    Eigen::VectorXd temp =
+        rbd::dofToVector(robot().mb(), robot().mbc().alpha)
+         + rbd::dofToVector(robot().mb(), robot().mbc().alphaD) *timeStep;
+
+    double inv_dt =  1.0/ecQpEstimatorPtr->getImpactModel()->getImpactDuration();
+    Eigen::Vector3d predictedForce =  inv_dt*(ecQpEstimatorPtr->getJacobianDeltaF("r_sole")*temp);
+    //Eigen::Vector3d predictedForce =  inv_dt*(ecQpEstimatorPtr->getJacobianDeltaF("r_sole")*ecQpEstimatorPtr->getImpactModel()->getEeVelocityJump());
+    return predictedForce; 
+    });
+ 
+  logger().addLogEntry("qpEc_compare_LeftFootForce", [this]() {
+    Eigen::VectorXd temp =
+        rbd::dofToVector(robot().mb(), robot().mbc().alpha)
+         + rbd::dofToVector(robot().mb(), robot().mbc().alphaD) *timeStep;
+
+    double inv_dt =  1.0/ecQpEstimatorPtr->getImpactModel()->getImpactDuration();
+    Eigen::Vector3d predictedForce =  inv_dt*(ecQpEstimatorPtr->getJacobianDeltaF("l_sole")*temp);
+    //Eigen::Vector3d predictedForce =  inv_dt*(ecQpEstimatorPtr->getJacobianDeltaF("l_sole")*ecQpEstimatorPtr->getImpactModel()->getEeVelocityJump());
+    return predictedForce; 
+    });
+  logger().addLogEntry("qpEc_compare_RightHandForce", [this]() {
+    Eigen::Vector3d temp =
+        rbd::dofToVector(robot().mb(), robot().mbc().alpha)
+         + rbd::dofToVector(robot().mb(), robot().mbc().alphaD)*timeStep;
+
+
+    double inv_dt =  1.0/ecQpEstimatorPtr->getImpactModel()->getImpactDuration();
+    //Eigen::Vector3d predictedForce =  inv_dt*(ecQpEstimatorPtr->getJacobianDeltaF("r_wrist")*ecQpEstimatorPtr->getImpactModel()->getJointVel());
+    Eigen::Vector3d predictedForce =  inv_dt*(ecQpEstimatorPtr->getJacobianDeltaF("r_wrist"))*temp;
+    return predictedForce; 
+    });
+
+/*
+  logger().addLogEntry("qpEc_compare_RightHandForce", [this]() {
+    Eigen::Vector3d temp =
+        rbd::dofToVector(robot().mb(), robot().mbc().alpha)
+         + rbd::dofToVector(robot().mb(), robot().mbc().alphaD) *timeStep;
+
+    double inv_dt =  1.0/ecQpEstimatorPtr->getImpactModel()->getImpactDuration();
+    Eigen::Vector3d predictedForce =  inv_dt*(ecQpEstimatorPtr->getJacobianDeltaF("r_wrist")*temp);
+    //Eigen::Vector3d predictedForce =  inv_dt*(ecQpEstimatorPtr->getJacobianDeltaF("r_wrist")*ecQpEstimatorPtr->getImpactModel()->getEeVelocityJump());
+    return predictedForce; 
+    });
+    */
+ logger().addLogEntry("qpEc_compare_delta_tau", [this]() {
+    Eigen::VectorXd temp =
+        rbd::dofToVector(robot().mb(), robot().mbc().alpha)
+         + rbd::dofToVector(robot().mb(), robot().mbc().alphaD) *timeStep;
+
+    double inv_dt =  1/ecQpEstimatorPtr->getImpactModel()->getImpactDuration();
+    return (ecQpEstimatorPtr->getTauJump() - inv_dt*ecQpEstimatorPtr->getJacobianDeltaTau()*temp).norm();
+  });
+
+  logger().addLogEntry("qpEc_compare_delta_dq", [this]() {
+    return (ecQpEstimatorPtr->getJointVelJump() - ecQpEstimatorPtr->getJacobianDeltaAlpha()*ecQpEstimatorPtr->getImpactModel()->getProjector()*ecQpEstimatorPtr->getImpactModel()->getJointVel()).norm();
+  });
+
+
+  logger().addLogEntry("qpEc_compare_delta_v", [this]() {
+    Eigen::VectorXd temp =
+        rbd::dofToVector(robot().mb(), robot().mbc().alpha)
+         + rbd::dofToVector(robot().mb(), robot().mbc().alphaD) *timeStep;
+    Eigen::Vector3d diff = ecQpEstimatorPtr->getImpactModel()->getEeVelocityJump() - ecQpEstimatorPtr->getImpactModel()->getProjector()*ecQpEstimatorPtr->getImpactModel()->getJointVel(); 
+    return diff; 
+  });
+
+
+
+
   // -------------------------- QP estimator solved by mini QP
   logger().addLogEntry("qp_RightFootForce", [this]() {
     return qpEstimatorPtr->getEndeffector("r_sole").estimatedAverageImpulsiveForce;
@@ -562,15 +715,6 @@ logger().addLogEntry("COM_sum_predict_impulse", [this]() {
   logger().addLogEntry("qp_LeftFootForce", [this]() {
     return qpEstimatorPtr->getEndeffector("l_sole").estimatedAverageImpulsiveForce;
     });
-  
-  logger().addLogEntry("qp_LeftHandForce", [this]() {
-    return qpEstimatorPtr->getEndeffector("l_wrist").estimatedAverageImpulsiveForce;
-    });
-    
-  logger().addLogEntry("qp_RightHandForce", [this]() {
-    return qpEstimatorPtr->getEndeffector("r_wrist").estimatedAverageImpulsiveForce;
-    });
-
   logger().addLogEntry("qp_RightHandForce", [this]() {
     return qpEstimatorPtr->getEndeffector("r_wrist").estimatedAverageImpulsiveForce;
     });
@@ -578,6 +722,10 @@ logger().addLogEntry("COM_sum_predict_impulse", [this]() {
   logger().addLogEntry("qp_delta_q_dot", [this]() {
     return qpEstimatorPtr->getJointVelJump();
     });
+  logger().addLogEntry("qp_delta_tau", [this]() {
+    return qpEstimatorPtr->getTauJump();
+    });
+
 
   logger().addLogEntry("qp_delta_v_leftFoot", [this]() {
     return qpEstimatorPtr->getEndeffector("l_sole").eeVJump;
@@ -585,10 +733,6 @@ logger().addLogEntry("COM_sum_predict_impulse", [this]() {
 
   logger().addLogEntry("qp_delta_v_rightFoot", [this]() {
     return qpEstimatorPtr->getEndeffector("r_sole").eeVJump;
-    });
-
-  logger().addLogEntry("qp_delta_v_leftHand", [this]() {
-    return qpEstimatorPtr->getEndeffector("l_wrist").eeVJump;
     });
 
   logger().addLogEntry("qp_delta_v_rightHand", [this]() {
@@ -609,14 +753,14 @@ logger().addLogEntry("COM_sum_predict_impulse", [this]() {
 
   logger().addLogEntry("test_delta_tau_upper", [this]() {
     Eigen::VectorXd upper = 5.0 * rbd::dofToVector(multiImpactPredictorPtr->getPredictor("r_wrist")->getRobot().mb(), multiImpactPredictorPtr->getPredictor("r_wrist")->getRobot().tu())
-                            - (1 / multiImpactPredictorPtr->getPredictor("r_wrist")->getImpactDuration_()) * multiImpactPredictorPtr->getPredictor("r_wrist")->getJacobianDeltaTau()
+                            - (1 / multiImpactPredictorPtr->getPredictor("r_wrist")->getImpactDuration()) * multiImpactPredictorPtr->getPredictor("r_wrist")->getJacobianDeltaTau()
                                   * rbd::dofToVector(robot().mb(), robot().mbc().alpha);
     return upper;
   });
 
   logger().addLogEntry("test_delta_tau_lower", [this]() {
     Eigen::VectorXd lower = 5.0 * rbd::dofToVector(multiImpactPredictorPtr->getPredictor("r_wrist")->getRobot().mb(), multiImpactPredictorPtr->getPredictor("r_wrist")->getRobot().tl())
-                            - (1 / multiImpactPredictorPtr->getPredictor("r_wrist")->getImpactDuration_()) * multiImpactPredictorPtr->getPredictor("r_wrist")->getJacobianDeltaTau()
+                            - (1 / multiImpactPredictorPtr->getPredictor("r_wrist")->getImpactDuration()) * multiImpactPredictorPtr->getPredictor("r_wrist")->getJacobianDeltaTau()
                                   * rbd::dofToVector(robot().mb(), robot().mbc().alpha);
     return lower;
   });
@@ -995,9 +1139,9 @@ bool Controller::run()
 
        bool debug = config()("impact")("constraints")("zmpWithImpulse")("debug");
        zmpImpulse_.reset(new mc_impact::zmpWithImpulse(//*multiImpactPredictorPtr->getPredictor("r_wrist"),
-			       			       *(multiImpactPredictorPtr->getPredictor("r_wrist")),
+			       			       *qpEstimatorPtr,
                                                        supports,
-                                                       timeStep, timeStep,
+                                                       timeStep, qpEstimatorPtr->getImpactModel()->getImpactDuration(),
                                                        {zmpVector[0], zmpVector[1], zmpVector[2], zmpVector[3]}, /// This is the supportPolygon
                                                        debug)
                         );
@@ -1009,40 +1153,43 @@ bool Controller::run()
     {
 
        std::vector<double> contactArea = config()("impact")("constraints")("copWithImpulse")("contactArea");
-      copImpulseRightFoot_.reset(new mc_impact::copWithImpulse(*multiImpactPredictorPtr->getPredictor("r_wrist"), "r_sole", "RightFootForceSensor",
-                                                               timeStep, timeStep, {contactArea[0], contactArea[1], contactArea[2], contactArea[3]}));
+      copImpulseRightFoot_.reset(new mc_impact::copWithImpulse(*qpEstimatorPtr, "r_sole", "RightFootForceSensor",
+                                                               timeStep, qpEstimatorPtr->getImpactModel()->getImpactDuration(), {contactArea[0], contactArea[1], contactArea[2], contactArea[3]}));
       solver().addConstraint(copImpulseRightFoot_.get());
 
-      copImpulseLeftFoot_.reset(new mc_impact::copWithImpulse(*multiImpactPredictorPtr->getPredictor("r_wrist"), "l_sole", "LeftFootForceSensor",
-                                                              timeStep, timeStep, {contactArea[0], contactArea[1], contactArea[2], contactArea[3]}));
+      copImpulseLeftFoot_.reset(new mc_impact::copWithImpulse(*qpEstimatorPtr, "l_sole", "LeftFootForceSensor",
+                                                              timeStep, qpEstimatorPtr->getImpactModel()->getImpactDuration(), {contactArea[0], contactArea[1], contactArea[2], contactArea[3]}));
       solver().addConstraint(copImpulseLeftFoot_.get());
     }
     if(config()("impact")("constraints")("frictionWithImpulse"))
     {
       frictionImpulseLeftFoot_.reset(new mc_impact::frictionWithImpulse(
-          *multiImpactPredictorPtr->getPredictor("r_wrist"), "l_sole", "LeftFootForceSensor", getContact("LeftFoot"), timeStep, timeStep));
+          *qpEstimatorPtr, "l_sole", "LeftFootForceSensor", getContact("LeftFoot"), timeStep, qpEstimatorPtr->getImpactModel()->getImpactDuration()));
       solver().addConstraint(frictionImpulseLeftFoot_.get());
 
       frictionImpulseRightFoot_.reset(new mc_impact::frictionWithImpulse(
-          *multiImpactPredictorPtr->getPredictor("r_wrist"), "r_sole", "RightFootForceSensor", getContact("RightFoot"), timeStep, timeStep));
+          *qpEstimatorPtr, "r_sole", "RightFootForceSensor", getContact("RightFoot"), timeStep, qpEstimatorPtr->getImpactModel()->getImpactDuration()));
       solver().addConstraint(frictionImpulseRightFoot_.get());
     }
 
     if(config()("impact")("constraints")("jointTorque")("on"))
     {
-      boundTorqueJump_.reset(new mc_impact::BoundJointTorqueJump(*multiImpactPredictorPtr->getPredictor("r_wrist"), timeStep, timeStep, config()("impact")("constraints")("jointTorque")("multiplier")));
+      boundTorqueJump_.reset(new mc_impact::BoundJointTorqueJump(*qpEstimatorPtr, timeStep, qpEstimatorPtr->getImpactModel()->getImpactDuration(), config()("impact")("constraints")("jointTorque")("multiplier")));
       solver().addConstraint(boundTorqueJump_.get());
+      /*
       left_boundTorqueJump_.reset(new mc_impact::BoundJointTorqueJump(*multiImpactPredictorPtr->getPredictor("l_wrist"), timeStep, timeStep, config()("impact")("constraints")("jointTorque")("multiplier")));
       solver().addConstraint(left_boundTorqueJump_.get());
-
+*/
     }
 
     if(config()("impact")("constraints")("jointVelocity"))
     {
-      boundVelocityJump_.reset(new mc_impact::BoundJointVelocityJump(*multiImpactPredictorPtr->getPredictor("r_wrist"), timeStep));
+      boundVelocityJump_.reset(new mc_impact::BoundJointVelocityJump(*qpEstimatorPtr, timeStep));
       solver().addConstraint(boundVelocityJump_.get());
+      /*
       left_boundVelocityJump_.reset(new mc_impact::BoundJointVelocityJump(*multiImpactPredictorPtr->getPredictor("l_wrist"), timeStep));
       solver().addConstraint(left_boundVelocityJump_.get());
+      */
 
     }
 
@@ -1085,16 +1232,7 @@ void Controller::reset(const mc_control::ControllerResetData & data)
     lcpSolverPtr.reset(new mi_lcp(robot(), realRobots().robot(), multiImpactPredictorPtr->getOsd_(), config()("lcp")("dim"), config()("lcp")("solver"), config()("lcp")("convergenceThreshold") ) );
     std::cout<<"lcp solver is created"<<std::endl;
   }
-/*
-  qpEstimatorParameter qpParams{ 
-  .Qweight = config()("qpEstimator")("Qweight"),
-  .impactBodyName = config()("impact")("estimation")("impactBodyName"),
-  .impactDuration = config()("impact")("estimation")("delta_dt"),
-  .coeFrictionDeduction = config()("impact")("estimation")("coeFrictionDeduction"),
-  .coeRes = config()("impact")("estimation")("coeRestitution"),
-  .dim = config()("qpEstimator")("dim"),
-  }; 
-  */
+
   if(config()("qpEstimator")("on")){
   qpEstimatorParameter qpParams; 
   qpParams.Qweight = config()("qpEstimator")("Qweight");
@@ -1103,25 +1241,45 @@ void Controller::reset(const mc_control::ControllerResetData & data)
   qpParams.coeFrictionDeduction = config()("impact")("estimation")("coeFrictionDeduction");
   qpParams.coeRes = config()("impact")("estimation")("coeRestitution");
   qpParams.dim = config()("qpEstimator")("dim");
+  qpParams.timeStep = timeStep;
+
   qpParams.useLagrangeMultiplier= false; 
+  qpParams.useJsd = true; 
+  qpParams.useOsd = true; 
 
-  qpParams.useLagrangeMultiplier= true; 
   qpEstimatorPtr.reset(new mi_qpEstimator(robot(), multiImpactPredictorPtr->getOsd_(), qpParams ));
-  
-  ecqpEstimatorPtr.reset(new mi_qpEstimator(robot(), multiImpactPredictorPtr->getOsd_(), qpParams ));
-  qpEstimatorPtr->print();
-  std::cout<<"qp solver is created"<<std::endl;
-  std::vector<std::string> eeNameVector = config()("impact")("estimation")("end-effectors");
 
+  qpParams.useJsd = true; 
+  qpParams.useOsd = false; 
+  jsdQpEstimatorPtr.reset(new mi_qpEstimator(robot(), multiImpactPredictorPtr->getOsd_(), qpParams ));
+
+  qpParams.useJsd = false; 
+  qpParams.useOsd = true; 
+  osdQpEstimatorPtr.reset(new mi_qpEstimator(robot(), multiImpactPredictorPtr->getOsd_(), qpParams ));
+
+  qpParams.useJsd = false; 
+  qpParams.useOsd = true; 
+  qpParams.useLagrangeMultiplier= true; 
+  ecQpEstimatorPtr.reset(new mi_qpEstimator(robot(), multiImpactPredictorPtr->getOsd_(), qpParams ));
+
+
+  std::cout<<"qp solver is created"<<std::endl;
+
+  std::vector<std::string> eeNameVector = config()("impact")("estimation")("end-effectors");
   for (auto idx = eeNameVector.begin(); idx!=eeNameVector.end(); ++idx )
   {
     qpEstimatorPtr->addEndeffector(*idx);
-    ecqpEstimatorPtr->addEndeffector(*idx);
+    osdQpEstimatorPtr->addEndeffector(*idx);
+    jsdQpEstimatorPtr->addEndeffector(*idx);
+    ecQpEstimatorPtr->addEndeffector(*idx);
   }
 
+  jsdQpEstimatorPtr->print();
+  osdQpEstimatorPtr->print();
+  ecQpEstimatorPtr->print();
+  qpEstimatorPtr->print();
   std::cout << "QP impulse estimator has added the endeffectors." << std::endl;
 
-  //qpEstimatorPtr->initializeQP();
   }
 
   /** First reset to get correct initial position of main robot */
