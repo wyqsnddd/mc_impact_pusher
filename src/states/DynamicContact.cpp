@@ -85,10 +85,10 @@ bool DynamicContactState::run(mc_control::fsm::Controller & ctlInput)
   ctl.multiImpactPredictorPtr->run(surfaceNormals);
 
   if(ctl.config()("qpEstimator")("on")){
-    ctl.qpEstimatorPtr->update(r_wrist_surfaceNormal);
-    ctl.osdQpEstimatorPtr->update(r_wrist_surfaceNormal);
-    ctl.jsdQpEstimatorPtr->update(r_wrist_surfaceNormal);
-    ctl.ecQpEstimatorPtr->update(r_wrist_surfaceNormal);
+    ctl.qpEstimatorPtr->update(surfaceNormals);
+    ctl.osdQpEstimatorPtr->update(surfaceNormals);
+    ctl.jsdQpEstimatorPtr->update(surfaceNormals);
+    ctl.ecQpEstimatorPtr->update(surfaceNormals);
   }
 
   if(ctl.config()("lcp")("on")){

@@ -643,7 +643,7 @@ logger().addLogEntry("COM_sum_predict_impulse", [this]() {
         rbd::dofToVector(robot().mb(), robot().mbc().alpha)
          + rbd::dofToVector(robot().mb(), robot().mbc().alphaD) *timeStep;
 
-    double inv_dt =  1.0/ecQpEstimatorPtr->getImpactModel()->getImpactDuration();
+    double inv_dt =  1.0/ecQpEstimatorPtr->getImpactModel("r_wrist")->getImpactDuration();
     Eigen::Vector3d predictedForce =  inv_dt*(ecQpEstimatorPtr->getJacobianDeltaF("r_sole")*temp);
     //Eigen::Vector3d predictedForce =  inv_dt*(ecQpEstimatorPtr->getJacobianDeltaF("r_sole")*ecQpEstimatorPtr->getImpactModel()->getEeVelocityJump());
     return predictedForce; 
@@ -654,7 +654,7 @@ logger().addLogEntry("COM_sum_predict_impulse", [this]() {
         rbd::dofToVector(robot().mb(), robot().mbc().alpha)
          + rbd::dofToVector(robot().mb(), robot().mbc().alphaD) *timeStep;
 
-    double inv_dt =  1.0/ecQpEstimatorPtr->getImpactModel()->getImpactDuration();
+    double inv_dt =  1.0/ecQpEstimatorPtr->getImpactModel("r_wrist")->getImpactDuration();
     Eigen::Vector3d predictedForce =  inv_dt*(ecQpEstimatorPtr->getJacobianDeltaF("l_sole")*temp);
     //Eigen::Vector3d predictedForce =  inv_dt*(ecQpEstimatorPtr->getJacobianDeltaF("l_sole")*ecQpEstimatorPtr->getImpactModel()->getEeVelocityJump());
     return predictedForce; 
@@ -665,7 +665,7 @@ logger().addLogEntry("COM_sum_predict_impulse", [this]() {
          + rbd::dofToVector(robot().mb(), robot().mbc().alphaD)*timeStep;
 
 
-    double inv_dt =  1.0/ecQpEstimatorPtr->getImpactModel()->getImpactDuration();
+    double inv_dt =  1.0/ecQpEstimatorPtr->getImpactModel("r_wrist")->getImpactDuration();
     //Eigen::Vector3d predictedForce =  inv_dt*(ecQpEstimatorPtr->getJacobianDeltaF("r_wrist")*ecQpEstimatorPtr->getImpactModel()->getJointVel());
     Eigen::Vector3d predictedForce =  inv_dt*(ecQpEstimatorPtr->getJacobianDeltaF("r_wrist"))*temp;
     return predictedForce; 
@@ -688,12 +688,12 @@ logger().addLogEntry("COM_sum_predict_impulse", [this]() {
         rbd::dofToVector(robot().mb(), robot().mbc().alpha)
          + rbd::dofToVector(robot().mb(), robot().mbc().alphaD) *timeStep;
 
-    double inv_dt =  1/ecQpEstimatorPtr->getImpactModel()->getImpactDuration();
+    double inv_dt =  1/ecQpEstimatorPtr->getImpactModel("r_wrist")->getImpactDuration();
     return (ecQpEstimatorPtr->getTauJump() - inv_dt*ecQpEstimatorPtr->getJacobianDeltaTau()*temp).norm();
   });
 
   logger().addLogEntry("qpEc_compare_delta_dq", [this]() {
-    return (ecQpEstimatorPtr->getJointVelJump() - ecQpEstimatorPtr->getJacobianDeltaAlpha()*ecQpEstimatorPtr->getImpactModel()->getProjector()*ecQpEstimatorPtr->getImpactModel()->getJointVel()).norm();
+    return (ecQpEstimatorPtr->getJointVelJump() - ecQpEstimatorPtr->getJacobianDeltaAlpha()*ecQpEstimatorPtr->getImpactModel("r_wrist")->getProjector()*ecQpEstimatorPtr->getImpactModel("r_wrist")->getJointVel()).norm();
   });
 
 
@@ -701,7 +701,7 @@ logger().addLogEntry("COM_sum_predict_impulse", [this]() {
     Eigen::VectorXd temp =
         rbd::dofToVector(robot().mb(), robot().mbc().alpha)
          + rbd::dofToVector(robot().mb(), robot().mbc().alphaD) *timeStep;
-    Eigen::Vector3d diff = ecQpEstimatorPtr->getImpactModel()->getEeVelocityJump() - ecQpEstimatorPtr->getImpactModel()->getProjector()*ecQpEstimatorPtr->getImpactModel()->getJointVel(); 
+    Eigen::Vector3d diff = ecQpEstimatorPtr->getImpactModel("r_wrist")->getEeVelocityJump() - ecQpEstimatorPtr->getImpactModel("r_wrist")->getProjector()*ecQpEstimatorPtr->getImpactModel("r_wrist")->getJointVel(); 
     return diff; 
   });
 
@@ -1141,7 +1141,7 @@ bool Controller::run()
        zmpImpulse_.reset(new mc_impact::zmpWithImpulse(//*multiImpactPredictorPtr->getPredictor("r_wrist"),
 			       			       *qpEstimatorPtr,
                                                        supports,
-                                                       timeStep, qpEstimatorPtr->getImpactModel()->getImpactDuration(),
+                                                       timeStep, qpEstimatorPtr->getImpactModel("r_wrist")->getImpactDuration(),
                                                        {zmpVector[0], zmpVector[1], zmpVector[2], zmpVector[3]}, /// This is the supportPolygon
                                                        debug)
                         );
@@ -1154,27 +1154,27 @@ bool Controller::run()
 
        std::vector<double> contactArea = config()("impact")("constraints")("copWithImpulse")("contactArea");
       copImpulseRightFoot_.reset(new mc_impact::copWithImpulse(*qpEstimatorPtr, "r_sole", "RightFootForceSensor",
-                                                               timeStep, qpEstimatorPtr->getImpactModel()->getImpactDuration(), {contactArea[0], contactArea[1], contactArea[2], contactArea[3]}));
+                                                               timeStep, qpEstimatorPtr->getImpactModel("r_wrist")->getImpactDuration(), {contactArea[0], contactArea[1], contactArea[2], contactArea[3]}));
       solver().addConstraint(copImpulseRightFoot_.get());
 
       copImpulseLeftFoot_.reset(new mc_impact::copWithImpulse(*qpEstimatorPtr, "l_sole", "LeftFootForceSensor",
-                                                              timeStep, qpEstimatorPtr->getImpactModel()->getImpactDuration(), {contactArea[0], contactArea[1], contactArea[2], contactArea[3]}));
+                                                              timeStep, qpEstimatorPtr->getImpactModel("r_wrist")->getImpactDuration(), {contactArea[0], contactArea[1], contactArea[2], contactArea[3]}));
       solver().addConstraint(copImpulseLeftFoot_.get());
     }
     if(config()("impact")("constraints")("frictionWithImpulse"))
     {
       frictionImpulseLeftFoot_.reset(new mc_impact::frictionWithImpulse(
-          *qpEstimatorPtr, "l_sole", "LeftFootForceSensor", getContact("LeftFoot"), timeStep, qpEstimatorPtr->getImpactModel()->getImpactDuration()));
+          *qpEstimatorPtr, "l_sole", "LeftFootForceSensor", getContact("LeftFoot"), timeStep, qpEstimatorPtr->getImpactModel("r_wrist")->getImpactDuration()));
       solver().addConstraint(frictionImpulseLeftFoot_.get());
 
       frictionImpulseRightFoot_.reset(new mc_impact::frictionWithImpulse(
-          *qpEstimatorPtr, "r_sole", "RightFootForceSensor", getContact("RightFoot"), timeStep, qpEstimatorPtr->getImpactModel()->getImpactDuration()));
+          *qpEstimatorPtr, "r_sole", "RightFootForceSensor", getContact("RightFoot"), timeStep, qpEstimatorPtr->getImpactModel("r_wrist")->getImpactDuration()));
       solver().addConstraint(frictionImpulseRightFoot_.get());
     }
 
     if(config()("impact")("constraints")("jointTorque")("on"))
     {
-      boundTorqueJump_.reset(new mc_impact::BoundJointTorqueJump(*qpEstimatorPtr, timeStep, qpEstimatorPtr->getImpactModel()->getImpactDuration(), config()("impact")("constraints")("jointTorque")("multiplier")));
+      boundTorqueJump_.reset(new mc_impact::BoundJointTorqueJump(*qpEstimatorPtr, timeStep, qpEstimatorPtr->getImpactModel("r_wrist")->getImpactDuration(), config()("impact")("constraints")("jointTorque")("multiplier")));
       solver().addConstraint(boundTorqueJump_.get());
       /*
       left_boundTorqueJump_.reset(new mc_impact::BoundJointTorqueJump(*multiImpactPredictorPtr->getPredictor("l_wrist"), timeStep, timeStep, config()("impact")("constraints")("jointTorque")("multiplier")));
@@ -1236,7 +1236,8 @@ void Controller::reset(const mc_control::ControllerResetData & data)
   if(config()("qpEstimator")("on")){
   qpEstimatorParameter qpParams; 
   qpParams.Qweight = config()("qpEstimator")("Qweight");
-  qpParams.impactBodyName = std::string(config()("impact")("estimation")("impactBodyName"));
+
+  qpParams.impactBodyNames = config()("impact")("estimation")("impactBodies");
   qpParams.impactDuration = config()("impact")("estimation")("delta_dt");
   qpParams.coeFrictionDeduction = config()("impact")("estimation")("coeFrictionDeduction");
   qpParams.coeRes = config()("impact")("estimation")("coeRestitution");
@@ -1248,6 +1249,7 @@ void Controller::reset(const mc_control::ControllerResetData & data)
   qpParams.useOsd = true; 
 
   qpEstimatorPtr.reset(new mi_qpEstimator(robot(), multiImpactPredictorPtr->getOsd_(), qpParams ));
+
 
   qpParams.useJsd = true; 
   qpParams.useOsd = false; 

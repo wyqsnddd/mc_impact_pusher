@@ -408,10 +408,10 @@ bool PrepareHandState::run(mc_control::fsm::Controller & ctlInput)
   }
   
   if(ctl.config()("qpEstimator")("on")){
-    ctl.qpEstimatorPtr->update(r_wrist_surfaceNormal);
-    ctl.osdQpEstimatorPtr->update(r_wrist_surfaceNormal);
-    ctl.jsdQpEstimatorPtr->update(r_wrist_surfaceNormal);
-    ctl.ecQpEstimatorPtr->update(r_wrist_surfaceNormal);
+    ctl.qpEstimatorPtr->update(impactSurfaceNormals);
+    ctl.osdQpEstimatorPtr->update(impactSurfaceNormals);
+    ctl.jsdQpEstimatorPtr->update(impactSurfaceNormals);
+    ctl.ecQpEstimatorPtr->update(impactSurfaceNormals);
   }
   if(rEfTaskPtr_->eval().norm() <= efThreshold_)
   {

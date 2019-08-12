@@ -146,7 +146,7 @@
       "SlippageRight": false,
       "frictionWithImpulse": true,
       "copWithImpulse": {"on": true, "contactArea": [-0.09, 0.09, -0.05, 0.05]},
-      "zmpWithImpulse": {"on": false, "supportPolygon": [-0.08, 0.08, -0.12, 0.12], "debug": true}
+      "zmpWithImpulse": {"on": true, "supportPolygon": [-0.08, 0.08, -0.12, 0.12], "debug": true}
     },
     "estimation": {
       "coeFrictionDeduction": 0.2,
@@ -172,7 +172,7 @@
     "Contact":
     {
       "base": "DynamicContact", // C++ state
-      "contactVelocity" : [0.8, 0.0, 0.0], //
+      "contactVelocity" : [1.0, 0.0, 0.0], //
       "pushDepth":  [1.0, 0.0, 0.0], // Target position that should generate the impact
       // Velocity control for the end-effector
       "rightEfStiffness": 0.0,
