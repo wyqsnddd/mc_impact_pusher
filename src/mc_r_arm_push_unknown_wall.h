@@ -1,10 +1,9 @@
 #pragma once
 #include <mc_control/fsm/Controller.h>
 #include <mc_prediction/mi_impactPredictor.h>
-#include <mc_prediction/mi_multiImpactPredictor.h>
 #include <mc_prediction/mi_lcp.h>
+#include <mc_prediction/mi_multiImpactPredictor.h>
 #include <mc_prediction/mi_qpEstimator.h>
-
 #include <mc_rbdyn/RobotLoader.h>
 #include <mc_rbdyn/RobotModule.h>
 #include <mc_rbdyn/Robots.h>
@@ -39,7 +38,6 @@ struct Controller : public mc_control::fsm::Controller
   std::unique_ptr<mc_impact::copWithImpulse> copImpulseRightFoot_;
   std::unique_ptr<mc_impact::zmpWithImpulse> zmpImpulse_;
 
-
   std::unique_ptr<mc_impact::BoundJointTorqueJump> left_boundTorqueJump_;
   std::unique_ptr<mc_impact::BoundJointVelocityJump> left_boundVelocityJump_;
 
@@ -53,9 +51,6 @@ struct Controller : public mc_control::fsm::Controller
   std::unique_ptr<mc_impact::copWithImpulse> left_copImpulseRightFoot_;
   std::unique_ptr<mc_impact::zmpWithImpulse> left_zmpImpulse_;
 
-
-
-
   // Force sensor threshold
   double forceThreshold = 3.0;
 
@@ -63,14 +58,14 @@ struct Controller : public mc_control::fsm::Controller
 
   bool rArmInContact();
 
-  //std::unique_ptr<mi_impactPredictor> miPredictorPtr;
+  // std::unique_ptr<mi_impactPredictor> miPredictorPtr;
   std::unique_ptr<mi_multiImpactPredictor> multiImpactPredictorPtr;
   std::unique_ptr<mi_lcp> lcpSolverPtr;
   std::unique_ptr<mi_qpEstimator> qpEstimatorPtr;
   std::unique_ptr<mi_qpEstimator> jsdQpEstimatorPtr;
   std::unique_ptr<mi_qpEstimator> osdQpEstimatorPtr;
   std::unique_ptr<mi_qpEstimator> ecQpEstimatorPtr;
-  //std::shared_ptr<mi_osd> miOsdPtr;
+  // std::shared_ptr<mi_osd> miOsdPtr;
 
   const mc_rbdyn::Contact & getContact(const std::string & s);
 

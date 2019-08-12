@@ -19,23 +19,21 @@ void StabilizeContactState::start(mc_control::fsm::Controller & ctlInput)
   const auto & conf = ctl.config()("hrp4");
   const auto & surfaceName = ctl.config()("states")("Stabilize")("surfaceName");
 
-  rAdmTaskPtr_ = std::make_shared<mc_tasks::force::AdmittanceTask>(surfaceName, ctl.robots(), 0,
-                                                          conf("rightEfTaskDynamic")("stiffness"),
-                                                          conf("rightEfTaskDynamic")("weight"));
+  rAdmTaskPtr_ = std::make_shared<mc_tasks::force::AdmittanceTask>(
+      surfaceName, ctl.robots(), 0, conf("rightEfTaskDynamic")("stiffness"), conf("rightEfTaskDynamic")("weight"));
 
   ctl.solver().addTask(rAdmTaskPtr_);
 
- 
-  // read the current pose of the surface 
+  // read the current pose of the surface
   rAdmTaskPtr_->targetPose();
- 
+
   // Read from Json
   std::vector<double> targetForce = ctl.config()("states")("Stabilize")("targetForce");
   targetForce_(0) = targetForce[0];
   targetForce_(1) = targetForce[1];
   targetForce_(2) = targetForce[2];
 
-  rAdmTaskPtr_->targetWrench(sva::ForceVecd(Eigen::Vector3d::Zero(), targetForce_ ));
+  rAdmTaskPtr_->targetWrench(sva::ForceVecd(Eigen::Vector3d::Zero(), targetForce_));
   run(ctlInput);
 }
 
@@ -43,7 +41,7 @@ bool StabilizeContactState::run(mc_control::fsm::Controller & ctlInput)
 {
   auto & ctl = static_cast<Controller &>(ctlInput);
 
-  if(rAdmTaskPtr_->eval().norm()  )
+  if(rAdmTaskPtr_->eval().norm())
   {
     LOG_INFO("Admittance task achieved.");
     output("finished");
