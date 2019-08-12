@@ -3,10 +3,10 @@
 #include <mc_control/fsm/State.h>
 #include <mc_tasks/EndEffectorTask.h>
 
-#include "BoundJointTorqueJump.h"
-#include "BoundJointVelocityJump.h"
-#include "COPInsideContactAreaWithImpulse.h"
-#include "ZeroSlippageWithImpulse.h"
+#include <mc_impact_constraints/BoundJointTorqueJump.h>
+#include <mc_impact_constraints/BoundJointVelocityJump.h>
+#include <mc_impact_constraints/COPInsideContactAreaWithImpulse.h>
+#include <mc_impact_constraints/ZeroSlippageWithImpulse.h>
 
 struct DynamicContactState : mc_control::fsm::State
 {

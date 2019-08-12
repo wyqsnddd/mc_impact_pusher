@@ -9,13 +9,13 @@
 #include <mc_rbdyn/RobotModule.h>
 #include <mc_rbdyn/Robots.h>
 
-#include "BoundJointTorqueJump.h"
-#include "BoundJointVelocityJump.h"
-#include "COPInsideContactAreaWithImpulse.h"
-#include "ZeroSlippageWithImpulse.h"
-#include "copWithImpulse.h"
-#include "frictionWithImpulse.h"
-#include "zmpWithImpulse.h"
+#include <mc_impact_constraints/BoundJointTorqueJump.h>
+#include <mc_impact_constraints/BoundJointVelocityJump.h>
+#include <mc_impact_constraints/COPInsideContactAreaWithImpulse.h>
+#include <mc_impact_constraints/ZeroSlippageWithImpulse.h>
+#include <mc_impact_constraints/copWithImpulse.h>
+#include <mc_impact_constraints/frictionWithImpulse.h>
+#include <mc_impact_constraints/zmpWithImpulse.h>
 
 struct Controller : public mc_control::fsm::Controller
 {
