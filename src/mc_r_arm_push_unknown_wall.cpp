@@ -1139,9 +1139,9 @@ bool Controller::run()
 
        bool debug = config()("impact")("constraints")("zmpWithImpulse")("debug");
        zmpImpulse_.reset(new mc_impact::zmpWithImpulse(//*multiImpactPredictorPtr->getPredictor("r_wrist"),
-			       			       *qpEstimatorPtr,
+			       			       *ecQpEstimatorPtr,
                                                        supports,
-                                                       timeStep, qpEstimatorPtr->getImpactModel("r_wrist")->getImpactDuration(),
+                                                       timeStep, ecQpEstimatorPtr->getImpactModel("r_wrist")->getImpactDuration(),
                                                        {zmpVector[0], zmpVector[1], zmpVector[2], zmpVector[3]}, /// This is the supportPolygon
                                                        debug)
                         );
@@ -1153,28 +1153,28 @@ bool Controller::run()
     {
 
        std::vector<double> contactArea = config()("impact")("constraints")("copWithImpulse")("contactArea");
-      copImpulseRightFoot_.reset(new mc_impact::copWithImpulse(*qpEstimatorPtr, "r_sole", "RightFootForceSensor",
-                                                               timeStep, qpEstimatorPtr->getImpactModel("r_wrist")->getImpactDuration(), {contactArea[0], contactArea[1], contactArea[2], contactArea[3]}));
+      copImpulseRightFoot_.reset(new mc_impact::copWithImpulse(*ecQpEstimatorPtr, "r_sole", "RightFootForceSensor",
+                                                               timeStep, ecQpEstimatorPtr->getImpactModel("r_wrist")->getImpactDuration(), {contactArea[0], contactArea[1], contactArea[2], contactArea[3]}));
       solver().addConstraint(copImpulseRightFoot_.get());
 
-      copImpulseLeftFoot_.reset(new mc_impact::copWithImpulse(*qpEstimatorPtr, "l_sole", "LeftFootForceSensor",
-                                                              timeStep, qpEstimatorPtr->getImpactModel("r_wrist")->getImpactDuration(), {contactArea[0], contactArea[1], contactArea[2], contactArea[3]}));
+      copImpulseLeftFoot_.reset(new mc_impact::copWithImpulse(*ecQpEstimatorPtr, "l_sole", "LeftFootForceSensor",
+                                                              timeStep, ecQpEstimatorPtr->getImpactModel("r_wrist")->getImpactDuration(), {contactArea[0], contactArea[1], contactArea[2], contactArea[3]}));
       solver().addConstraint(copImpulseLeftFoot_.get());
     }
     if(config()("impact")("constraints")("frictionWithImpulse"))
     {
       frictionImpulseLeftFoot_.reset(new mc_impact::frictionWithImpulse(
-          *qpEstimatorPtr, "l_sole", "LeftFootForceSensor", getContact("LeftFoot"), timeStep, qpEstimatorPtr->getImpactModel("r_wrist")->getImpactDuration()));
+          *ecQpEstimatorPtr, "l_sole", "LeftFootForceSensor", getContact("LeftFoot"), timeStep, ecQpEstimatorPtr->getImpactModel("r_wrist")->getImpactDuration()));
       solver().addConstraint(frictionImpulseLeftFoot_.get());
 
       frictionImpulseRightFoot_.reset(new mc_impact::frictionWithImpulse(
-          *qpEstimatorPtr, "r_sole", "RightFootForceSensor", getContact("RightFoot"), timeStep, qpEstimatorPtr->getImpactModel("r_wrist")->getImpactDuration()));
+          *ecQpEstimatorPtr, "r_sole", "RightFootForceSensor", getContact("RightFoot"), timeStep, ecQpEstimatorPtr->getImpactModel("r_wrist")->getImpactDuration()));
       solver().addConstraint(frictionImpulseRightFoot_.get());
     }
 
     if(config()("impact")("constraints")("jointTorque")("on"))
     {
-      boundTorqueJump_.reset(new mc_impact::BoundJointTorqueJump(*qpEstimatorPtr, timeStep, qpEstimatorPtr->getImpactModel("r_wrist")->getImpactDuration(), config()("impact")("constraints")("jointTorque")("multiplier")));
+      boundTorqueJump_.reset(new mc_impact::BoundJointTorqueJump(*ecQpEstimatorPtr, timeStep, ecQpEstimatorPtr->getImpactModel("r_wrist")->getImpactDuration(), config()("impact")("constraints")("jointTorque")("multiplier")));
       solver().addConstraint(boundTorqueJump_.get());
       /*
       left_boundTorqueJump_.reset(new mc_impact::BoundJointTorqueJump(*multiImpactPredictorPtr->getPredictor("l_wrist"), timeStep, timeStep, config()("impact")("constraints")("jointTorque")("multiplier")));
@@ -1184,7 +1184,7 @@ bool Controller::run()
 
     if(config()("impact")("constraints")("jointVelocity"))
     {
-      boundVelocityJump_.reset(new mc_impact::BoundJointVelocityJump(*qpEstimatorPtr, timeStep));
+      boundVelocityJump_.reset(new mc_impact::BoundJointVelocityJump(*ecQpEstimatorPtr, timeStep));
       solver().addConstraint(boundVelocityJump_.get());
       /*
       left_boundVelocityJump_.reset(new mc_impact::BoundJointVelocityJump(*multiImpactPredictorPtr->getPredictor("l_wrist"), timeStep));

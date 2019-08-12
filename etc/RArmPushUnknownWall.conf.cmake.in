@@ -172,7 +172,7 @@
     "Contact":
     {
       "base": "DynamicContact", // C++ state
-      "contactVelocity" : [1.0, 0.0, 0.0], //
+      "contactVelocity" : [0.4, 0.0, 0.0], //
       "pushDepth":  [1.0, 0.0, 0.0], // Target position that should generate the impact
       // Velocity control for the end-effector
       "rightEfStiffness": 0.0,
@@ -181,7 +181,7 @@
     "Stabilize":
     {
       "base": "StabilizeContact", // C++ state
-      "contactVelocity" : [2.0, 0.0, 0.0], //
+      "contactVelocity" : [0.3, 0.0, 0.0], //
       "surfaceName": "rightpalm?",
       "targetForce": [20.0, 0.0, 0.0],
       // Velocity control for the end-effector
