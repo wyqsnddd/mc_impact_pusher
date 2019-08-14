@@ -71,6 +71,7 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
                       }
                       return zmp;
                     }));
+  
 
   std::string impactBodyString(config()("impact")("estimation")("impactBodyName"));
 
@@ -134,6 +135,67 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
 
   std::vector<std::string> contactBodies = config()("impact")("estimation")("contactBodies");
   multiImpactPredictorPtr->setContact(contactBodies);
+
+
+
+  if(config()("lcp")("on"))
+  {
+    lcpSolverPtr.reset(new mi_lcp(robot(), realRobots().robot(), multiImpactPredictorPtr->getOsd_(),
+                                  config()("lcp")("dim"), config()("lcp")("solver"),
+                                  config()("lcp")("convergenceThreshold")));
+    std::cout << "lcp solver is created" << std::endl;
+  }
+
+  if(config()("qpEstimator")("on"))
+  {
+    qpEstimatorParameter qpParams;
+    qpParams.Qweight = config()("qpEstimator")("Qweight");
+
+    qpParams.impactBodyNames = config()("impact")("estimation")("impactBodies");
+    qpParams.impactDuration = config()("impact")("estimation")("delta_dt");
+    qpParams.coeFrictionDeduction = config()("impact")("estimation")("coeFrictionDeduction");
+    qpParams.coeRes = config()("impact")("estimation")("coeRestitution");
+    qpParams.dim = config()("qpEstimator")("dim");
+    qpParams.timeStep = timeStep;
+
+    qpParams.useLagrangeMultiplier = false;
+    qpParams.useJsd = true;
+    qpParams.useOsd = true;
+
+    qpEstimatorPtr.reset(new mi_qpEstimator(robot(), multiImpactPredictorPtr->getOsd_(), qpParams));
+
+    qpParams.useJsd = true;
+    qpParams.useOsd = false;
+    jsdQpEstimatorPtr.reset(new mi_qpEstimator(robot(), multiImpactPredictorPtr->getOsd_(), qpParams));
+
+    qpParams.useJsd = false;
+    qpParams.useOsd = true;
+    osdQpEstimatorPtr.reset(new mi_qpEstimator(robot(), multiImpactPredictorPtr->getOsd_(), qpParams));
+
+    qpParams.useJsd = false;
+    qpParams.useOsd = true;
+    qpParams.useLagrangeMultiplier = true;
+    ecQpEstimatorPtr.reset(new mi_qpEstimator(robot(), multiImpactPredictorPtr->getOsd_(), qpParams));
+
+    std::cout << "qp solver is created" << std::endl;
+
+    std::vector<std::string> eeNameVector = config()("impact")("estimation")("end-effectors");
+    for(auto idx = eeNameVector.begin(); idx != eeNameVector.end(); ++idx)
+    {
+      qpEstimatorPtr->addEndeffector(*idx);
+      osdQpEstimatorPtr->addEndeffector(*idx);
+      jsdQpEstimatorPtr->addEndeffector(*idx);
+      ecQpEstimatorPtr->addEndeffector(*idx);
+    }
+
+    jsdQpEstimatorPtr->print();
+    osdQpEstimatorPtr->print();
+    ecQpEstimatorPtr->print();
+    qpEstimatorPtr->print();
+    std::cout << "QP impulse estimator has added the endeffectors." << std::endl;
+  }
+
+
   //----------------------------------- Jump on different branch:
   logger().addLogEntry("ee_Vel_impact_jump", [this]() {
     // Eigen::VectorXd eeVelJump =
@@ -586,6 +648,11 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
     logger().addLogEntry("qpEc_RightHandForce", [this]() {
       return ecQpEstimatorPtr->getEndeffector("r_wrist").estimatedAverageImpulsiveForce;
     });
+    logger().addLogEntry("qp_RightHand_impact_normal",
+                         [this]() { 
+			 return ecQpEstimatorPtr->getImpactModel("r_wrist")->getSurfaceNormal();
+			 });
+	
     logger().addLogEntry("qpEc_delta_q_dot", [this]() { return ecQpEstimatorPtr->getJointVelJump(); });
     logger().addLogEntry("qpEc_delta_tau", [this]() { return ecQpEstimatorPtr->getTauJump(); });
 
@@ -1183,62 +1250,6 @@ void Controller::reset(const mc_control::ControllerResetData & data)
 
   // lcpSolverPtr.reset(new mi_lcp(robot(), multiImpactPredictorPtr->getOsd_(), config()("lcp")("dim"),
   // config()("lcp")("solver"), config()("lcp")("convergenceThreshold") ) );
-  if(config()("lcp")("on"))
-  {
-    lcpSolverPtr.reset(new mi_lcp(robot(), realRobots().robot(), multiImpactPredictorPtr->getOsd_(),
-                                  config()("lcp")("dim"), config()("lcp")("solver"),
-                                  config()("lcp")("convergenceThreshold")));
-    std::cout << "lcp solver is created" << std::endl;
-  }
-
-  if(config()("qpEstimator")("on"))
-  {
-    qpEstimatorParameter qpParams;
-    qpParams.Qweight = config()("qpEstimator")("Qweight");
-
-    qpParams.impactBodyNames = config()("impact")("estimation")("impactBodies");
-    qpParams.impactDuration = config()("impact")("estimation")("delta_dt");
-    qpParams.coeFrictionDeduction = config()("impact")("estimation")("coeFrictionDeduction");
-    qpParams.coeRes = config()("impact")("estimation")("coeRestitution");
-    qpParams.dim = config()("qpEstimator")("dim");
-    qpParams.timeStep = timeStep;
-
-    qpParams.useLagrangeMultiplier = false;
-    qpParams.useJsd = true;
-    qpParams.useOsd = true;
-
-    qpEstimatorPtr.reset(new mi_qpEstimator(robot(), multiImpactPredictorPtr->getOsd_(), qpParams));
-
-    qpParams.useJsd = true;
-    qpParams.useOsd = false;
-    jsdQpEstimatorPtr.reset(new mi_qpEstimator(robot(), multiImpactPredictorPtr->getOsd_(), qpParams));
-
-    qpParams.useJsd = false;
-    qpParams.useOsd = true;
-    osdQpEstimatorPtr.reset(new mi_qpEstimator(robot(), multiImpactPredictorPtr->getOsd_(), qpParams));
-
-    qpParams.useJsd = false;
-    qpParams.useOsd = true;
-    qpParams.useLagrangeMultiplier = true;
-    ecQpEstimatorPtr.reset(new mi_qpEstimator(robot(), multiImpactPredictorPtr->getOsd_(), qpParams));
-
-    std::cout << "qp solver is created" << std::endl;
-
-    std::vector<std::string> eeNameVector = config()("impact")("estimation")("end-effectors");
-    for(auto idx = eeNameVector.begin(); idx != eeNameVector.end(); ++idx)
-    {
-      qpEstimatorPtr->addEndeffector(*idx);
-      osdQpEstimatorPtr->addEndeffector(*idx);
-      jsdQpEstimatorPtr->addEndeffector(*idx);
-      ecQpEstimatorPtr->addEndeffector(*idx);
-    }
-
-    jsdQpEstimatorPtr->print();
-    osdQpEstimatorPtr->print();
-    ecQpEstimatorPtr->print();
-    qpEstimatorPtr->print();
-    std::cout << "QP impulse estimator has added the endeffectors." << std::endl;
-  }
 
   /** First reset to get correct initial position of main robot */
   mc_control::MCController::reset(data);
