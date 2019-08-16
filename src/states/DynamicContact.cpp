@@ -141,7 +141,7 @@ bool DynamicContactState::run(mc_control::fsm::Controller & ctlInput)
       ctl.solver().removeConstraint(ctl.boundTorqueJump_.get());
     }
 
-    if(ctl.config()("impact")("constraints")("jointVelocity"))
+    if(ctl.config()("impact")("constraints")("jointVelocity")("on"))
     {
       ctl.solver().removeConstraint(ctl.boundVelocityJump_.get());
     }
