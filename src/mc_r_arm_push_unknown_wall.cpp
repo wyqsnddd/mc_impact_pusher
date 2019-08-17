@@ -1235,7 +1235,7 @@ bool Controller::run()
       bool debugVelocity = config()("impact")("constraints")("jointVelocity")("debug");
       double deductFactor = config()("impact")("constraints")("jointVelocity")("multiplier");
  
-      boundVelocityJump_.reset(new mc_impact::BoundJointVelocityJump(*ecQpEstimatorPtr, timeStep, debugVelocity));
+      boundVelocityJump_.reset(new mc_impact::BoundJointVelocityJump(*ecQpEstimatorPtr, timeStep, deductFactor, debugVelocity));
       solver().addConstraint(boundVelocityJump_.get());
       /*
       left_boundVelocityJump_.reset(new
