@@ -42,6 +42,43 @@ void PrepareHandState::start(mc_control::fsm::Controller & ctlInput)
       sva::PTransformd(desiredRotation, rEfTaskPtr_->get_ef_pose().translation() + translation_offset));
 
   run(ctlInput);
+  //--------------------------- Joint velocity and torque jump 
+  bool debugTorque = ctl.config()("impact")("constraints")("jointTorque")("on");
+  bool debugVelocity = ctl.config()("impact")("constraints")("jointVelocity")("on");
+  if(debugTorque){
+   ctl.logger().addLogEntry("qp_boundTau_difference_lower", [&ctl]() {
+    return ctl.boundTorqueJump_->getDiffLower();
+   });
+
+   ctl.logger().addLogEntry("qp_boundTau_difference_upper", [&ctl]() {
+    return ctl.boundTorqueJump_->getDiffUpper();
+   });
+
+   ctl.logger().addLogEntry("qp_boundTau_delta_tau", [&ctl]() {
+    return ctl.boundTorqueJump_->getDeltaTau();
+   });
+
+   ctl.logger().addLogEntry("qp_boundTau_delta_tau_compare", [&ctl]() {
+    return (Eigen::VectorXd)(ctl.boundTorqueJump_->getDeltaTau() - ctl.ecQpEstimatorPtr->getTauJump()).segment(6, ctl.ecQpEstimatorPtr->getDof() - 6);
+   });
+
+  }
+  if(debugVelocity){
+   ctl.logger().addLogEntry("qp_boundJointVel_difference_lower", [&ctl]() {
+    return ctl.boundVelocityJump_->getDiffLower();
+   });
+   ctl.logger().addLogEntry("qp_boundJointVel_difference_upper", [&ctl]() {
+    return ctl.boundVelocityJump_->getDiffUpper();
+   });
+   ctl.logger().addLogEntry("qp_boundJointVel_delta_vel", [&ctl]() {
+    return ctl.boundVelocityJump_->getDeltaVel();
+   });
+   ctl.logger().addLogEntry("qp_boundJointVel_delta_vel_compare", [&ctl]() {
+    return (Eigen::VectorXd)(ctl.boundVelocityJump_->getDeltaVel() - ctl.ecQpEstimatorPtr->getJointVelJump()).segment(6, ctl.ecQpEstimatorPtr->getDof() - 6);
+   });
+
+
+  }
 
   //--------------------------- CoP constraint:
   // Suppose the contact area is a 5 by 5 cm area:
@@ -378,10 +415,15 @@ bool PrepareHandState::run(mc_control::fsm::Controller & ctlInput)
   // ctl.multiImpactPredictorPtr->getPredictor("r_wrist")->run(X_0_ee.rotation() * surfaceNormal + X_0_ee.translation());
 
   std::map<std::string, Eigen::Vector3d> impactSurfaceNormals;
-  Eigen::Vector3d r_wrist_surfaceNormal = X_0_ee.rotation() * surfaceNormal + X_0_ee.translation();
+  //Eigen::Vector3d r_wrist_surfaceNormal = X_0_ee.rotation() * surfaceNormal + X_0_ee.translation();
   // Then we need to rotate it to the body frame orientation.
-  r_wrist_surfaceNormal = X_0_ee.rotation().transpose() * r_wrist_surfaceNormal;
-  impactSurfaceNormals["r_wrist"] = r_wrist_surfaceNormal;
+  //r_wrist_surfaceNormal = X_0_ee.rotation().transpose() * surfaceNormal;
+  //impactSurfaceNormals["r_wrist"] = r_wrist_surfaceNormal;
+  Eigen::Vector3d bodySurfaceNormal = X_0_ee.rotation().transpose()*surfaceNormal;
+  bodySurfaceNormal.normalize();
+  impactSurfaceNormals["r_wrist"] = bodySurfaceNormal; 
+
+
   /*
   Eigen::Vector3d l_surfaceNormal;
   l_surfaceNormal << 0, 1, 0;

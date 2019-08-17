@@ -64,11 +64,15 @@ bool DynamicContactState::run(mc_control::fsm::Controller & ctlInput)
 
   // ctl.miPredictorPtr->run(X_0_ee.rotation() * surfaceNormal + X_0_ee.translation());
 
-  Eigen::Vector3d r_wrist_surfaceNormal = X_0_ee.rotation() * surfaceNormal + X_0_ee.translation();
+  //Eigen::Vector3d r_wrist_surfaceNormal = X_0_ee.rotation() * surfaceNormal + X_0_ee.translation();
 
-  r_wrist_surfaceNormal = X_0_ee.rotation().transpose() * r_wrist_surfaceNormal;
+  //r_wrist_surfaceNormal = X_0_ee.rotation().transpose() * r_wrist_surfaceNormal;
   std::map<std::string, Eigen::Vector3d> surfaceNormals;
-  surfaceNormals["r_wrist"] = r_wrist_surfaceNormal;
+
+  Eigen::Vector3d bodySurfaceNormal = X_0_ee.rotation().transpose() * surfaceNormal; 
+  bodySurfaceNormal.normalize();
+
+  surfaceNormals["r_wrist"] = bodySurfaceNormal; 
   /*
   Eigen::Vector3d l_surfaceNormal;
   l_surfaceNormal << 0, 1, 0;

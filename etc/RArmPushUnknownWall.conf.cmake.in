@@ -11,7 +11,7 @@
   "contact_detection":
   {
     "UseForceSensor": true, // if true, use the force sensors to detect contact, otherwise use geometric sensor
-    "ForceThreshold": 50.0, // Force threshold that triggers transition. Only used if UseForceSensor is true
+    "ForceThreshold": 20.0, // Force threshold that triggers transition. Only used if UseForceSensor is true
     "ContactThreshold": 1e-5, // Contact distance threshold that triggers transition.
   },
   // Lifting height (m)
@@ -138,27 +138,25 @@
   },
   "impact": {
     "constraints": {
-      "jointVelocity": true,
-      "jointTorque": {"on": true, "multiplier": 1.0 },
+      "jointVelocity":{"on": true, "multiplier": 1.0, "debug": true},
+      "jointTorque": {"on": true, "multiplier": 0.5, "debug": true },
       "CoPLeft": false,
       "CoPRight": false,
       "SlippageLeft": false,
       "SlippageRight": false,
-      "frictionWithImpulse": true,
-      "copWithImpulse": {"on": true, "contactArea": [-0.09, 0.09, -0.05, 0.05]},
-      "zmpWithImpulse": {"on": true, "supportPolygon": [-0.08, 0.08, -0.12, 0.12], "debug": true}
+      "frictionWithImpulse": false,
+      "copWithImpulse": {"on": false, "contactArea": [-0.09, 0.09, -0.05, 0.05]},
+      "zmpWithImpulse": {"on": false, "supportPolygon": [-0.15, 0.15, -0.20, 0.20], "debug": true}
     },
     "estimation": {
-      "coeFrictionDeduction": 0.2,
-      "coeRestitution": 0.3,
+      "coeFrictionDeduction": 0.3,
+      "coeRestitution": 0.2,
       "delta_dt-old": 0.005,
-      "delta_dt": 0.005,
+      "delta_dt": 0.004,
       "useLinearJacobian": true,
       "contactBodies": ["l_sole", "r_sole"],
       "impactBodies": ["r_wrist"],
-      "impactBodies-old": ["r_wrist", "l_wrist"],
       "impactBodyName": "r_wrist",
-      "end-effectors-back": [ "l_sole", "r_sole", "l_wrist", "r_wrist"],
       "end-effectors": [ "l_sole", "r_sole", "r_wrist"]
     }
   },
@@ -172,7 +170,7 @@
     "Contact":
     {
       "base": "DynamicContact", // C++ state
-      "contactVelocity" : [0.4, 0.0, 0.0], //
+      "contactVelocity" : [1.0, 0.0, 0.0], //
       "pushDepth":  [1.0, 0.0, 0.0], // Target position that should generate the impact
       // Velocity control for the end-effector
       "rightEfStiffness": 0.0,
