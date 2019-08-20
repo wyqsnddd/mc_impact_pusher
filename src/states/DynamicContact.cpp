@@ -47,7 +47,6 @@ void DynamicContactState::start(mc_control::fsm::Controller & ctlInput)
   {
     rPosTaskPtr_->positionTask->damping(static_cast<double>(state_conf_("rightEfDamping")));
   }
-  // ctl.miPredictorPtr->resetDataStructure();
 
   run(ctlInput);
 }
@@ -56,40 +55,14 @@ bool DynamicContactState::run(mc_control::fsm::Controller & ctlInput)
 {
   auto & ctl = static_cast<Controller &>(ctlInput);
 
-  // ctl.miOsdPtr->update();
-  Eigen::Vector3d surfaceNormal;
-  surfaceNormal << 1, 0, 0;
-  // Convert surfaceNormal to the local frame of the right wrist.
-  sva::PTransformd X_0_ee = ctl.robot().bodyPosW("r_wrist");
-
-  // ctl.miPredictorPtr->run(X_0_ee.rotation() * surfaceNormal + X_0_ee.translation());
-
-  //Eigen::Vector3d r_wrist_surfaceNormal = X_0_ee.rotation() * surfaceNormal + X_0_ee.translation();
-
-  //r_wrist_surfaceNormal = X_0_ee.rotation().transpose() * r_wrist_surfaceNormal;
-  std::map<std::string, Eigen::Vector3d> surfaceNormals;
-
-  Eigen::Vector3d bodySurfaceNormal = X_0_ee.rotation().transpose() * surfaceNormal; 
-  bodySurfaceNormal.normalize();
-
-  surfaceNormals["r_wrist"] = bodySurfaceNormal; 
-  /*
-  Eigen::Vector3d l_surfaceNormal;
-  l_surfaceNormal << 0, 1, 0;
-  // Convert surfaceNormal to the local frame of the right wrist.
-  sva::PTransformd X_0_lee = ctl.robot().bodyPosW("l_wrist");
-  surfaceNormals["l_wrist"] =  X_0_lee.rotation() * l_surfaceNormal + X_0_lee.translation();
-*/
-  // ctl.miPredictorPtr->run(X_0_ee.rotation() * surfaceNormal + X_0_ee.translation());
-
-  ctl.multiImpactPredictorPtr->run(surfaceNormals);
+  ctl.setOsd()->update();
 
   if(ctl.config()("qpEstimator")("on"))
   {
-    ctl.qpEstimatorPtr->update(surfaceNormals);
-    ctl.osdQpEstimatorPtr->update(surfaceNormals);
-    ctl.jsdQpEstimatorPtr->update(surfaceNormals);
-    ctl.ecQpEstimatorPtr->update(surfaceNormals);
+    ctl.qpEstimatorPtr->update();
+    ctl.osdQpEstimatorPtr->update();
+    ctl.jsdQpEstimatorPtr->update();
+    ctl.ecQpEstimatorPtr->update();
   }
 
   if(ctl.config()("lcp")("on"))

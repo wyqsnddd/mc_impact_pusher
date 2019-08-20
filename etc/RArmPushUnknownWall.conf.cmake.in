@@ -144,9 +144,9 @@
       "CoPRight": false,
       "SlippageLeft": false,
       "SlippageRight": false,
-      "frictionWithImpulse": false,
-      "copWithImpulse": {"on": false, "contactArea": [-0.09, 0.09, -0.05, 0.05]},
-      "zmpWithImpulse": {"on": false, "supportPolygon": [-0.15, 0.15, -0.20, 0.20], "debug": true}
+      "frictionWithImpulse": true,
+      "copWithImpulse": {"on": true, "contactArea": [-0.09, 0.09, -0.05, 0.05]},
+      "zmpWithImpulse": {"on": true, "supportPolygon": [-0.15, 0.15, -0.20, 0.20], "debug": true}
     },
     "estimation": {
       "coeFrictionDeduction": 0.3,
@@ -154,10 +154,12 @@
       "delta_dt-old": 0.005,
       "delta_dt": 0.004,
       "useLinearJacobian": true,
-      "contactBodies": ["l_sole", "r_sole"],
-      "impactBodies": ["r_wrist"],
+      "contactBodies": ["l_ankle", "r_ankle"],
       "impactBodyName": "r_wrist",
-      "end-effectors": [ "l_sole", "r_sole", "r_wrist"]
+      "inertialFrame_impactNormal": [1.0, 0.0, 0.0], 
+      "end-effectors-old-old": [ "l_sole", "r_sole", "r_wrist"],
+      "end-effectors-old": [ "l_ankle", "r_ankle", "r_wrist"],
+      "end-effectors": [ "l_ankle", "r_ankle", "r_wrist"]
     }
   },
   "states": {
