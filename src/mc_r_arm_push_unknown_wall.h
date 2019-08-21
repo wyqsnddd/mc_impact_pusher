@@ -56,27 +56,28 @@ struct Controller : public mc_control::fsm::Controller
 
   bool rArmInContact();
 
-  std::unique_ptr<mi_lcp> lcpSolverPtr;
-  std::unique_ptr<mi_qpEstimator> qpEstimatorPtr;
-  std::unique_ptr<mi_qpEstimator> jsdQpEstimatorPtr;
-  std::unique_ptr<mi_qpEstimator> osdQpEstimatorPtr;
-  std::unique_ptr<mi_qpEstimator> ecQpEstimatorPtr;
+  std::unique_ptr<mc_impact::mi_lcp> lcpSolverPtr;
+  std::unique_ptr<mc_impact::mi_qpEstimator> qpEstimatorPtr;
+  std::unique_ptr<mc_impact::mi_qpEstimator> jsdQpEstimatorPtr;
+  std::unique_ptr<mc_impact::mi_qpEstimator> osdQpEstimatorPtr;
+  std::unique_ptr<mc_impact::mi_qpEstimator> ecQpEstimatorPtr;
 
   const mc_rbdyn::Contact & getContact(const std::string & s);
 
-  const std::shared_ptr<mi_osd> getOsd()
+  const std::shared_ptr<mc_impact::mi_osd> getOsd()
   {
     return miOsdPtr_;
   }
 
-  std::shared_ptr<mi_osd> & setOsd()
+  std::shared_ptr<mc_impact::mi_osd> & setOsd()
   {
     return miOsdPtr_;
   }
+
 private:
   const mc_rbdyn::Robot & realRobot() const;
 
-  std::shared_ptr<mi_osd> miOsdPtr_;
+  std::shared_ptr<mc_impact::mi_osd> miOsdPtr_;
   double impactIndicator_;
 
   size_t iter_ = 0;

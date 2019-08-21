@@ -9,8 +9,8 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
   std::cout << "Kinematics and Dynamics constraints are created." << std::endl;
   solver().addConstraintSet(kinematicsConstraint);
   solver().addConstraintSet(dynamicsConstraint);
-  // ------------------------- Test the new bodyWrench function: 
-  
+  // ------------------------- Test the new bodyWrench function:
+
   logger().addLogEntry("bodyWrench_LeftHandForceSensor", [this]() {
     auto & robot = this->realRobots().robot();
     return robot.bodyWrench("l_wrist");
@@ -36,12 +36,10 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
     return robot.forceSensor("RightFootForceSensor").worldWrench(robot);
   });
 
-
   logger().addLogEntry("worldWrench_LeftFootForceSensor", [this]() {
     auto & robot = this->realRobots().robot();
     return robot.forceSensor("LeftFootForceSensor").worldWrench(robot);
   });
-
 
   logger().addLogEntry("worldWrench_LeftHandForceSensor", [this]() {
     auto & robot = this->realRobots().robot();
@@ -53,7 +51,7 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
     return robot.forceSensor("RightHandForceSensor").worldWrench(robot);
   });
 
-  // ----------------------------------------------------------- 
+  // -----------------------------------------------------------
   logger().addLogEntry("CoP_LeftFoot_World", [this]() {
     auto & robot = this->realRobots().robot();
     return robot.copW("LeftFoot");
@@ -115,16 +113,15 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
                       }
                       return zmp;
                     }));
-  
 
   std::string impactBodyString(config()("impact")("estimation")("impactBodyName"));
 
-  miOsdPtr_ = std::make_shared<mi_osd>(robot(), true);
+  miOsdPtr_ = std::make_shared<mc_impact::mi_osd>(robot(), true);
   std::vector<std::string> eeNameVector = config()("impact")("estimation")("end-effectors");
 
   miOsdPtr_->initializeDataStructure(static_cast<int>(eeNameVector.size()));
   miOsdPtr_->resetDataStructure();
-  
+
   for(auto index = eeNameVector.begin(); index != eeNameVector.end(); ++index)
   {
 
@@ -146,18 +143,16 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
 
   std::cout << "Operational space dynamics Predictor is created." << std::endl;
 
-
   if(config()("lcp")("on"))
   {
-    lcpSolverPtr.reset(new mi_lcp(robot(), realRobots().robot(), getOsd(),
-                                  config()("lcp")("dim"), config()("lcp")("solver"),
-                                  config()("lcp")("convergenceThreshold")));
+    lcpSolverPtr.reset(new mc_impact::mi_lcp(robot(), realRobots().robot(), getOsd(), config()("lcp")("dim"),
+                                             config()("lcp")("solver"), config()("lcp")("convergenceThreshold")));
     std::cout << "lcp solver is created" << std::endl;
   }
 
   if(config()("qpEstimator")("on"))
   {
-    qpEstimatorParameter qpParams;
+    mc_impact::qpEstimatorParameter qpParams;
     qpParams.Qweight = config()("qpEstimator")("Qweight");
 
     qpParams.impactDuration = config()("impact")("estimation")("delta_dt");
@@ -167,26 +162,26 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
     qpParams.timeStep = timeStep;
 
     std::string impactBodyName = config()("impact")("estimation")("impactBodyName");
-    Eigen::Vector3d inertial_normal  = config()("impact")("estimation")("inertialFrame_impactNormal");
+    Eigen::Vector3d inertial_normal = config()("impact")("estimation")("inertialFrame_impactNormal");
     qpParams.impactNameAndNormals.insert(std::pair<std::string, Eigen::Vector3d>(impactBodyName, inertial_normal));
     qpParams.useLagrangeMultiplier = false;
     qpParams.useJsd = true;
     qpParams.useOsd = true;
 
-    qpEstimatorPtr.reset(new mi_qpEstimator(robot(), getOsd(), qpParams));
+    qpEstimatorPtr.reset(new mc_impact::mi_qpEstimator(robot(), getOsd(), qpParams));
 
     qpParams.useJsd = true;
     qpParams.useOsd = false;
-    jsdQpEstimatorPtr.reset(new mi_qpEstimator(robot(), getOsd(), qpParams));
+    jsdQpEstimatorPtr.reset(new mc_impact::mi_qpEstimator(robot(), getOsd(), qpParams));
 
     qpParams.useJsd = false;
     qpParams.useOsd = true;
-    osdQpEstimatorPtr.reset(new mi_qpEstimator(robot(), getOsd(), qpParams));
+    osdQpEstimatorPtr.reset(new mc_impact::mi_qpEstimator(robot(), getOsd(), qpParams));
 
     qpParams.useJsd = false;
     qpParams.useOsd = true;
     qpParams.useLagrangeMultiplier = true;
-    ecQpEstimatorPtr.reset(new mi_qpEstimator(robot(), getOsd(), qpParams));
+    ecQpEstimatorPtr.reset(new mc_impact::mi_qpEstimator(robot(), getOsd(), qpParams));
 
     std::cout << "qp solver is created" << std::endl;
 
@@ -207,11 +202,10 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
     std::cout << "QP impulse estimator has added the endeffectors." << std::endl;
   }
 
-
   // ------------------------------Contact velocity
 
   // ---------------------------- constructor: add modified constraints
-  
+
   logger().addLogEntry("ee_Vel_real", [this]() {
     return realRobots().robot().mbc().bodyVelB[realRobots().robot().mb().bodyIndexByName("r_wrist")];
   });
@@ -360,10 +354,8 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
       return ecQpEstimatorPtr->getEndeffector("r_wrist").estimatedAverageImpulsiveForce;
     });
     logger().addLogEntry("qp_RightHand_impact_normal",
-                         [this]() { 
-			 return ecQpEstimatorPtr->getImpactModel("r_wrist")->getSurfaceNormal();
-			 });
-	
+                         [this]() { return ecQpEstimatorPtr->getImpactModel("r_wrist")->getSurfaceNormal(); });
+
     logger().addLogEntry("qpEc_delta_q_dot", [this]() { return ecQpEstimatorPtr->getJointVelJump(); });
     logger().addLogEntry("qpEc_delta_tau", [this]() { return ecQpEstimatorPtr->getTauJump(); });
 
@@ -383,19 +375,17 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
     logger().addLogEntry("qpEc_ee_v_normal",
                          [this]() { return ecQpEstimatorPtr->getImpactModel("r_wrist")->getSurfaceNormal(); });
 
-
-
-
     // test the qpestimator Jacobians:
 
     // ecQpEstimatorPtr
     logger().addLogEntry("qpEc_compare_delta_dq", [this]() {
-
       Eigen::VectorXd temp = rbd::dofToVector(robot().mb(), robot().mbc().alpha)
                              + rbd::dofToVector(robot().mb(), robot().mbc().alphaD) * timeStep;
 
-      //return (ecQpEstimatorPtr->getJointVelJump() - ecQpEstimatorPtr->getJacobianDeltaAlpha() * temp).norm();
-      return (ecQpEstimatorPtr->getJointVelJump() - ecQpEstimatorPtr->getJacobianDeltaAlpha() * ecQpEstimatorPtr->getImpactModel("r_wrist")->getJointVel()).norm();
+      // return (ecQpEstimatorPtr->getJointVelJump() - ecQpEstimatorPtr->getJacobianDeltaAlpha() * temp).norm();
+      return (ecQpEstimatorPtr->getJointVelJump()
+              - ecQpEstimatorPtr->getJacobianDeltaAlpha() * ecQpEstimatorPtr->getImpactModel("r_wrist")->getJointVel())
+          .norm();
     });
 
     logger().addLogEntry("qpEc_compare_RightFootForce", [this]() {
@@ -426,8 +416,9 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
       double inv_dt = 1.0 / ecQpEstimatorPtr->getImpactModel("r_wrist")->getImpactDuration();
       // Eigen::Vector3d predictedForce =
       // inv_dt*(ecQpEstimatorPtr->getJacobianDeltaF("r_wrist")*ecQpEstimatorPtr->getImpactModel()->getJointVel());
-      //Eigen::Vector3d predictedForce = inv_dt * (ecQpEstimatorPtr->getJacobianDeltaF("r_wrist")) * temp;
-      Eigen::Vector3d predictedForce = inv_dt * (ecQpEstimatorPtr->getJacobianDeltaF("r_wrist")) * ecQpEstimatorPtr->getImpactModel("r_wrist")->getJointVel();
+      // Eigen::Vector3d predictedForce = inv_dt * (ecQpEstimatorPtr->getJacobianDeltaF("r_wrist")) * temp;
+      Eigen::Vector3d predictedForce = inv_dt * (ecQpEstimatorPtr->getJacobianDeltaF("r_wrist"))
+                                       * ecQpEstimatorPtr->getImpactModel("r_wrist")->getJointVel();
       return predictedForce;
     });
 
@@ -445,13 +436,14 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
         });
         */
     logger().addLogEntry("qpEc_compare_delta_tau", [this]() {
-
       Eigen::VectorXd temp = rbd::dofToVector(robot().mb(), robot().mbc().alpha)
                              + rbd::dofToVector(robot().mb(), robot().mbc().alphaD) * timeStep;
 
       double inv_dt = 1 / ecQpEstimatorPtr->getImpactModel("r_wrist")->getImpactDuration();
-      //return (ecQpEstimatorPtr->getTauJump() - inv_dt * ecQpEstimatorPtr->getJacobianDeltaTau() * temp).norm();
-      return (Eigen::VectorXd)(ecQpEstimatorPtr->getTauJump() - inv_dt * ecQpEstimatorPtr->getJacobianDeltaTau() * ecQpEstimatorPtr->getImpactModel("r_wrist")->getJointVel());
+      // return (ecQpEstimatorPtr->getTauJump() - inv_dt * ecQpEstimatorPtr->getJacobianDeltaTau() * temp).norm();
+      return (Eigen::VectorXd)(ecQpEstimatorPtr->getTauJump()
+                               - inv_dt * ecQpEstimatorPtr->getJacobianDeltaTau()
+                                     * ecQpEstimatorPtr->getImpactModel("r_wrist")->getJointVel());
     });
 
     logger().addLogEntry("qpEc_compare_delta_v", [this]() {
@@ -476,14 +468,13 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
 
     logger().addLogEntry("qp_delta_v_leftFoot", [this]() { return qpEstimatorPtr->getEndeffector("l_ankle").eeVJump; });
 
-    logger().addLogEntry("qp_delta_v_rightFoot", [this]() { return qpEstimatorPtr->getEndeffector("r_ankle").eeVJump; });
+    logger().addLogEntry("qp_delta_v_rightFoot",
+                         [this]() { return qpEstimatorPtr->getEndeffector("r_ankle").eeVJump; });
 
     logger().addLogEntry("qp_delta_v_rightHand",
                          [this]() { return qpEstimatorPtr->getEndeffector("r_wrist").eeVJump; });
     logger().addLogEntry("qp_delta_v_impact",
                          [this]() { return qpEstimatorPtr->getImpactModel("r_wrist")->getEeVelocityJump(); });
-
-
   }
   //----------------------------- check the LCP estimated contact force
 
@@ -532,7 +523,7 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
     tempZMP.z() = 0;
     return tempZMP;
   });
-   //----------------------------- F_COP
+  //----------------------------- F_COP
   //----------------------------- F_QP
 
   logger().addLogEntry("l_ankle_wrench_QP", [this]() {
@@ -554,10 +545,12 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
     return impactIndicator_;
     // return F;
   });
-  // Calculate the impulsive torque: 
+  // Calculate the impulsive torque:
   /*
   logger().addLogEntry("impulsive_torque_r_wrist", [this]() {
-    return  (Eigen::VectorXd)(ecQpEstimatorPtr->getOsd()->getJacobian("r_wrist").transpose()*robot().forceSensor("RightHandForceSensor").force()).segment(6, ecQpEstimatorPtr->getDof()-6);
+    return
+  (Eigen::VectorXd)(ecQpEstimatorPtr->getOsd()->getJacobian("r_wrist").transpose()*robot().forceSensor("RightHandForceSensor").force()).segment(6,
+  ecQpEstimatorPtr->getDof()-6);
   });
 */
   //-----------------------------
@@ -636,7 +629,7 @@ bool Controller::run()
       std::vector<double> zmpVector = config()("impact")("constraints")("zmpWithImpulse")("supportPolygon");
 
       bool debug = config()("impact")("constraints")("zmpWithImpulse")("debug");
-      zmpImpulse_.reset(new mc_impact::zmpWithImpulse( 
+      zmpImpulse_.reset(new mc_impact::zmpWithImpulse(
           *ecQpEstimatorPtr, supports, timeStep, ecQpEstimatorPtr->getImpactModel("r_wrist")->getImpactDuration(),
           {zmpVector[0], zmpVector[1], zmpVector[2], zmpVector[3]}, /// This is the supportPolygon
           debug));
@@ -687,8 +680,9 @@ bool Controller::run()
     {
       bool debugVelocity = config()("impact")("constraints")("jointVelocity")("debug");
       double deductFactor = config()("impact")("constraints")("jointVelocity")("multiplier");
- 
-      boundVelocityJump_.reset(new mc_impact::BoundJointVelocityJump(*ecQpEstimatorPtr, timeStep, deductFactor, debugVelocity));
+
+      boundVelocityJump_.reset(
+          new mc_impact::BoundJointVelocityJump(*ecQpEstimatorPtr, timeStep, deductFactor, debugVelocity));
       solver().addConstraint(boundVelocityJump_.get());
     }
 
@@ -699,7 +693,6 @@ bool Controller::run()
 
 void Controller::reset(const mc_control::ControllerResetData & data)
 {
-
 
   /** First reset to get correct initial position of main robot */
   mc_control::MCController::reset(data);

@@ -42,42 +42,33 @@ void PrepareHandState::start(mc_control::fsm::Controller & ctlInput)
       sva::PTransformd(desiredRotation, rEfTaskPtr_->get_ef_pose().translation() + translation_offset));
 
   run(ctlInput);
-  //--------------------------- Joint velocity and torque jump 
+  //--------------------------- Joint velocity and torque jump
   bool debugTorque = ctl.config()("impact")("constraints")("jointTorque")("on");
   bool debugVelocity = ctl.config()("impact")("constraints")("jointVelocity")("on");
-  if(debugTorque){
-   ctl.logger().addLogEntry("qp_boundTau_difference_lower", [&ctl]() {
-    return ctl.boundTorqueJump_->getDiffLower();
-   });
+  if(debugTorque)
+  {
+    ctl.logger().addLogEntry("qp_boundTau_difference_lower", [&ctl]() { return ctl.boundTorqueJump_->getDiffLower(); });
 
-   ctl.logger().addLogEntry("qp_boundTau_difference_upper", [&ctl]() {
-    return ctl.boundTorqueJump_->getDiffUpper();
-   });
+    ctl.logger().addLogEntry("qp_boundTau_difference_upper", [&ctl]() { return ctl.boundTorqueJump_->getDiffUpper(); });
 
-   ctl.logger().addLogEntry("qp_boundTau_delta_tau", [&ctl]() {
-    return ctl.boundTorqueJump_->getDeltaTau();
-   });
+    ctl.logger().addLogEntry("qp_boundTau_delta_tau", [&ctl]() { return ctl.boundTorqueJump_->getDeltaTau(); });
 
-   ctl.logger().addLogEntry("qp_boundTau_delta_tau_compare", [&ctl]() {
-    return (Eigen::VectorXd)(ctl.boundTorqueJump_->getDeltaTau() - ctl.ecQpEstimatorPtr->getTauJump()).segment(6, ctl.ecQpEstimatorPtr->getDof() - 6);
-   });
-
+    ctl.logger().addLogEntry("qp_boundTau_delta_tau_compare", [&ctl]() {
+      return (Eigen::VectorXd)(ctl.boundTorqueJump_->getDeltaTau() - ctl.ecQpEstimatorPtr->getTauJump())
+          .segment(6, ctl.ecQpEstimatorPtr->getDof() - 6);
+    });
   }
-  if(debugVelocity){
-   ctl.logger().addLogEntry("qp_boundJointVel_difference_lower", [&ctl]() {
-    return ctl.boundVelocityJump_->getDiffLower();
-   });
-   ctl.logger().addLogEntry("qp_boundJointVel_difference_upper", [&ctl]() {
-    return ctl.boundVelocityJump_->getDiffUpper();
-   });
-   ctl.logger().addLogEntry("qp_boundJointVel_delta_vel", [&ctl]() {
-    return ctl.boundVelocityJump_->getDeltaVel();
-   });
-   ctl.logger().addLogEntry("qp_boundJointVel_delta_vel_compare", [&ctl]() {
-    return (Eigen::VectorXd)(ctl.boundVelocityJump_->getDeltaVel() - ctl.ecQpEstimatorPtr->getJointVelJump()).segment(6, ctl.ecQpEstimatorPtr->getDof() - 6);
-   });
-
-
+  if(debugVelocity)
+  {
+    ctl.logger().addLogEntry("qp_boundJointVel_difference_lower",
+                             [&ctl]() { return ctl.boundVelocityJump_->getDiffLower(); });
+    ctl.logger().addLogEntry("qp_boundJointVel_difference_upper",
+                             [&ctl]() { return ctl.boundVelocityJump_->getDiffUpper(); });
+    ctl.logger().addLogEntry("qp_boundJointVel_delta_vel", [&ctl]() { return ctl.boundVelocityJump_->getDeltaVel(); });
+    ctl.logger().addLogEntry("qp_boundJointVel_delta_vel_compare", [&ctl]() {
+      return (Eigen::VectorXd)(ctl.boundVelocityJump_->getDeltaVel() - ctl.ecQpEstimatorPtr->getJointVelJump())
+          .segment(6, ctl.ecQpEstimatorPtr->getDof() - 6);
+    });
   }
 
   //--------------------------- CoP constraint:
@@ -133,12 +124,9 @@ void PrepareHandState::start(mc_control::fsm::Controller & ctlInput)
       return difference;
     });
 
-    ctl.logger().addLogEntry("ZMP_prediction_zmpconstraint", [&ctl]() {
-            return ctl.zmpImpulse_->getZMP_prediction();
-    });
+    ctl.logger().addLogEntry("ZMP_prediction_zmpconstraint", [&ctl]() { return ctl.zmpImpulse_->getZMP_prediction(); });
 
     ctl.logger().addLogEntry("ZMP_Constraint_test", [&ctl]() {
-      
       Eigen::VectorXd result = ctl.zmpImpulse_->getA() * rbd::dofToVector(ctl.robot().mb(), ctl.robot().mbc().alphaD)
                                - ctl.zmpImpulse_->getb();
       return result;
@@ -193,8 +181,8 @@ void PrepareHandState::start(mc_control::fsm::Controller & ctlInput)
     Eigen::Vector2d result = multiplier_ * f_qp;
     return result;
   });
-  
-   ctl.logger().addLogEntry("r_ankle_zero_slippage_sensor", [&ctl]() {
+
+  ctl.logger().addLogEntry("r_ankle_zero_slippage_sensor", [&ctl]() {
     double mu = mc_rbdyn::Contact::defaultFriction;
     Eigen::MatrixXd multiplier_;
     multiplier_.resize(2, 3);
@@ -214,7 +202,6 @@ bool PrepareHandState::run(mc_control::fsm::Controller & ctlInput)
 
   auto & ctl = static_cast<Controller &>(ctlInput);
   // std::cout << "PrepareState: the right ef error is: " << rEfTaskPtr_->eval().norm() << std::endl;
-
 
   ctl.setOsd()->update();
 
