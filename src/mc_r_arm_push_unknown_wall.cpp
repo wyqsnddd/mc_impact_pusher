@@ -56,24 +56,6 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
     auto & robot = this->realRobots().robot();
     return robot.copW("LeftFoot");
   });
-
-  logger().addLogEntry("CoP_LeftFoot_local_constraint", [this]() {
-    return copImpulseLeftFoot_->getCop(); 
-  });
-
-  logger().addLogEntry("CoP_RightFoot_local_constraint", [this]() {
-    return copImpulseRightFoot_->getCop(); 
-  });
-
-  logger().addLogEntry("CoP_LeftFoot_local_constraint_perturb", [this]() {
-    return copImpulseLeftFoot_->getCopPerturb(); 
-  });
-
-  logger().addLogEntry("CoP_RightFoot_local_constraint_perturb", [this]() {
-    return copImpulseRightFoot_->getCopPerturb(); 
-  });
-
-  
   logger().addLogEntry("CoP_LeftFoot_World", [this]() {
     auto & robot = this->realRobots().robot();
     return robot.copW("LeftFoot");
@@ -98,6 +80,7 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
     }
     return zmp;
   });
+
   logger().addLogEntry("RightWrist", [this]() { return robot().mbc().bodyPosW[robot().bodyIndexByName("r_wrist")]; });
   logger().addLogEntry("realRobot_posW", [this]() { return realRobot().posW(); });
 
@@ -508,15 +491,14 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
   //----------------------------- check the impulsive joint torque
   //----------------------------- check the perturbed ZMP
   logger().addLogEntry("ZMP_QP", [this]() {
-    sva::PTransformd X_0_CoM = sva::PTransformd(robot().com());
-    sva::PTransformd X_0_rSole = robot().bodyPosW("r_ankle");
-    sva::PTransformd X_rSole_CoM = X_0_CoM * X_0_rSole.inv();
-    sva::PTransformd X_0_lSole = robot().bodyPosW("l_ankle");
-    sva::PTransformd X_lSole_CoM = X_0_CoM * X_0_lSole.inv();
 
-    sva::ForceVecd F_r_qp = X_rSole_CoM.dualMul(solver().desiredContactForce(getContact("RightFoot")));
 
-    sva::ForceVecd F_l_qp = X_lSole_CoM.dualMul(solver().desiredContactForce(getContact("LeftFoot")));
+    sva::PTransformd X_rSole_0 = robot().bodyPosW("r_sole").inv();
+    sva::PTransformd X_lSole_0 = robot().bodyPosW("l_sole").inv();
+
+
+    sva::ForceVecd F_r_qp = X_rSole_0.dualMul(solver().desiredContactForce(getContact("RightFoot")));
+    sva::ForceVecd F_l_qp = X_lSole_0.dualMul(solver().desiredContactForce(getContact("LeftFoot")));
 
     double denominator = (F_l_qp.force().z() + F_r_qp.force().z());
     Eigen::Vector3d tempZMP;
@@ -525,16 +507,42 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
 
     return tempZMP;
   });
+  logger().addLogEntry("ZMP_test_calculation_allforce", [this]() {
 
-  logger().addLogEntry("ZMP_test_calculation", [this]() {
+    sva::PTransformd X_rSole_0 = robot().bodyPosW("r_sole").inv();
+    sva::PTransformd X_lSole_0 = robot().bodyPosW("l_sole").inv();
+    sva::PTransformd X_ree_0 = robot().bodyPosW("r_wrist").inv();
+
+
     sva::ForceVecd fr_sensor = robot().forceSensor("RightFootForceSensor").wrench();
-    sva::PTransformd X_0_rSole = robot().bodyPosW("r_ankle");
-    sva::PTransformd X_rSole_0 = X_0_rSole.inv();
     sva::ForceVecd fr_0 = X_rSole_0.dualMul(fr_sensor);
 
     sva::ForceVecd fl_sensor = robot().forceSensor("LeftFootForceSensor").wrench();
-    sva::PTransformd X_0_lSole = robot().bodyPosW("l_ankle");
-    sva::PTransformd X_lSole_0 = X_0_lSole.inv();
+    sva::ForceVecd fl_0 = X_lSole_0.dualMul(fl_sensor);
+
+    sva::ForceVecd free_sensor = robot().forceSensor("RightHandForceSensor").wrench();
+    sva::ForceVecd free_0 = X_ree_0.dualMul(free_sensor);
+
+
+    double denominator = fr_0.force().z() + fl_0.force().z() + free_0.force().z();
+
+    Eigen::Vector3d tempZMP;
+    tempZMP.x() = -(fr_0.couple().y() + fl_0.couple().y() + free_0.couple().y()) / denominator;
+    tempZMP.y() = (fr_0.couple().x() + fl_0.couple().x() + free_0.couple().x()) / denominator;
+    tempZMP.z() = 0;
+    return tempZMP;
+  });
+
+  logger().addLogEntry("ZMP_test_calculation", [this]() {
+
+    sva::PTransformd X_rSole_0 = robot().bodyPosW("r_sole").inv();
+    sva::PTransformd X_lSole_0 = robot().bodyPosW("l_sole").inv();
+
+
+    sva::ForceVecd fr_sensor = robot().forceSensor("RightFootForceSensor").wrench();
+    sva::ForceVecd fr_0 = X_rSole_0.dualMul(fr_sensor);
+
+    sva::ForceVecd fl_sensor = robot().forceSensor("LeftFootForceSensor").wrench();
     sva::ForceVecd fl_0 = X_lSole_0.dualMul(fl_sensor);
 
     double denominator = fr_0.force().z() + fl_0.force().z();
@@ -651,10 +659,12 @@ bool Controller::run()
       std::vector<double> zmpVector = config()("impact")("constraints")("zmpWithImpulse")("supportPolygon");
 
       bool debug = config()("impact")("constraints")("zmpWithImpulse")("debug");
+      bool allforce = config()("impact")("constraints")("zmpWithImpulse")("allforce");
+
       zmpImpulse_.reset(new mc_impact::zmpWithImpulse(
           *ecQpEstimatorPtr, supports, timeStep, ecQpEstimatorPtr->getImpactModel("r_wrist")->getImpactDuration(),
           {zmpVector[0], zmpVector[1], zmpVector[2], zmpVector[3]}, /// This is the supportPolygon
-          debug));
+          allforce, debug));
 
       solver().addConstraint(zmpImpulse_.get());
     }
@@ -674,6 +684,18 @@ bool Controller::run()
                                         ecQpEstimatorPtr->getImpactModel("r_wrist")->getImpactDuration(),
                                         {contactArea[0], contactArea[1], contactArea[2], contactArea[3]}));
       solver().addConstraint(copImpulseLeftFoot_.get());
+
+      logger().addLogEntry("CoP_LeftFoot_local_constraint_perturb",
+                           [this]() { return copImpulseLeftFoot_->getCopPerturb(); });
+
+      logger().addLogEntry("CoP_RightFoot_local_constraint_perturb",
+                           [this]() { return copImpulseRightFoot_->getCopPerturb(); });
+
+      logger().addLogEntry("CoP_LeftFoot_local_constraint", [this]() { return copImpulseLeftFoot_->getCop(); });
+
+      logger().addLogEntry("CoP_RightFoot_local_constraint", [this]() { return copImpulseRightFoot_->getCop(); });
+
+
     }
     if(config()("impact")("constraints")("frictionWithImpulse"))
     {

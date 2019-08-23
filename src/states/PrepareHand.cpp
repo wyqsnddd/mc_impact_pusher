@@ -116,15 +116,18 @@ void PrepareHandState::start(mc_control::fsm::Controller & ctlInput)
   if(ctl.config()("impact")("constraints")("zmpWithImpulse")("on"))
   {
 
-    ctl.logger().addLogEntry("ZMP_perturbation_zmpconstraint",
+    ctl.logger().addLogEntry("ZMP_perturbation_pconstraint",
                              [&ctl]() { return ctl.zmpImpulse_->getZMP_perturbation(); });
-    ctl.logger().addLogEntry("ZMP_sensor_zmpconstraint", [&ctl]() { return ctl.zmpImpulse_->getZMP_sensor(); });
+
+    ctl.logger().addLogEntry("ZMP_sensor_constraint", [&ctl]() { return ctl.zmpImpulse_->getZMP_sensor(); });
+
     ctl.logger().addLogEntry("ZMP_constraint_difference", [&ctl]() {
       Eigen::VectorXd difference = ctl.zmpImpulse_->getZMP_constraint_difference();
       return difference;
     });
 
-    ctl.logger().addLogEntry("ZMP_prediction_zmpconstraint", [&ctl]() { return ctl.zmpImpulse_->getZMP_prediction(); });
+    ctl.logger().addLogEntry("ZMP_prediction_allforce_constraint", [&ctl]() { return ctl.zmpImpulse_->getZMP_prediction_allforce(); });
+    ctl.logger().addLogEntry("ZMP_prediction_feetforce_constraint", [&ctl]() { return ctl.zmpImpulse_->getZMP_prediction_feetforce(); });
 
     ctl.logger().addLogEntry("ZMP_Constraint_test", [&ctl]() {
       Eigen::VectorXd result = ctl.zmpImpulse_->getA() * rbd::dofToVector(ctl.robot().mb(), ctl.robot().mbc().alphaD)

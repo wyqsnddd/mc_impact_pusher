@@ -139,20 +139,20 @@
   "impact": {
     "constraints": {
       "jointVelocity":{"on": true, "multiplier": 1.0, "debug": true},
-      "jointTorque": {"on": true, "multiplier": 1.0, "debug": true },
+      "jointTorque": {"on": true, "multiplier": 0.5, "debug": true },
       "CoPLeft": false,
       "CoPRight": false,
       "SlippageLeft": false,
       "SlippageRight": false,
       "frictionWithImpulse": true,
       "copWithImpulse": {"on": true, "contactArea": [-0.09, 0.09, -0.05, 0.05]},
-      "zmpWithImpulse": {"on": false, "supportPolygon": [-0.15, 0.15, -0.20, 0.20], "debug": true}
+      "zmpWithImpulse": {"on": true, "supportPolygon": [-0.1, 0.1, -0.20, 0.20], "allforce": true, "debug": true}
     },
     "estimation": {
       "coeFrictionDeduction": 0.3,
       "coeRestitution": 0.2,
-      "delta_dt-old": 0.005,
-      "delta_dt": 0.004,
+      "delta_dt-old": 0.004,
+      "delta_dt": 0.005,
       "useLinearJacobian": true,
       "contactBodies": ["l_ankle", "r_ankle"],
       "impactBodyName": "r_wrist",
