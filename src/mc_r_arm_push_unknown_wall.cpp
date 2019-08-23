@@ -56,6 +56,28 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
     auto & robot = this->realRobots().robot();
     return robot.copW("LeftFoot");
   });
+
+  logger().addLogEntry("CoP_LeftFoot_local_constraint", [this]() {
+    return copImpulseLeftFoot_->getCop(); 
+  });
+
+  logger().addLogEntry("CoP_RightFoot_local_constraint", [this]() {
+    return copImpulseRightFoot_->getCop(); 
+  });
+
+  logger().addLogEntry("CoP_LeftFoot_local_constraint_perturb", [this]() {
+    return copImpulseLeftFoot_->getCopPerturb(); 
+  });
+
+  logger().addLogEntry("CoP_RightFoot_local_constraint_perturb", [this]() {
+    return copImpulseRightFoot_->getCopPerturb(); 
+  });
+
+  
+  logger().addLogEntry("CoP_LeftFoot_World", [this]() {
+    auto & robot = this->realRobots().robot();
+    return robot.copW("LeftFoot");
+  });
   logger().addLogEntry("CoP_RightFoot_World", [this]() {
     auto & robot = this->realRobots().robot();
     return robot.copW("RightFoot");

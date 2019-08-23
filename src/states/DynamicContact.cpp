@@ -95,7 +95,7 @@ bool DynamicContactState::run(mc_control::fsm::Controller & ctlInput)
     // FIXME: when removing these tasks, the hand keep moving forward in IdleState.... Why?
     // ctl.solver().removeTask(rPosTaskPtr_);
     // ctl.solver().removeTask(ctl.comTaskPtr);
-
+    /*
     if(ctl.config()("impact")("constraints")("zmpWithImpulse")("on"))
     {
       ctl.solver().removeConstraint(ctl.zmpImpulse_.get());
@@ -123,6 +123,7 @@ bool DynamicContactState::run(mc_control::fsm::Controller & ctlInput)
       ctl.solver().removeConstraint(ctl.boundVelocityJump_.get());
     }
     ctl.solver().updateConstrSize();
+    */
     LOG_INFO("remaining tasks");
     for(const auto task : ctl.solver().tasks())
     {
