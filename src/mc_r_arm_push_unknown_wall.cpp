@@ -765,5 +765,3 @@ const mc_rbdyn::Contact & Controller::getContact(const std::string & s)
   }
   LOG_ERROR_AND_THROW(std::runtime_error, "Failed to find contact id for " << s)
 }
-
-CONTROLLER_CONSTRUCTOR("RArmPushUnknownWall", Controller)
