@@ -509,18 +509,20 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
   });
   logger().addLogEntry("ZMP_test_calculation_allforce", [this]() {
 
-    sva::PTransformd X_rSole_0 = robot().bodyPosW("r_sole").inv();
-    sva::PTransformd X_lSole_0 = robot().bodyPosW("l_sole").inv();
+    sva::PTransformd X_rSole_0 = robot().bodyPosW("r_ankle").inv();
+    sva::PTransformd X_lSole_0 = robot().bodyPosW("l_ankle").inv();
     sva::PTransformd X_ree_0 = robot().bodyPosW("r_wrist").inv();
 
 
-    sva::ForceVecd fr_sensor = robot().forceSensor("RightFootForceSensor").wrench();
+    //sva::ForceVecd fr_sensor = robot().forceSensor("RightFootForceSensor").wrench();
+    sva::ForceVecd fr_sensor = robot().bodyWrench("r_ankle");
     sva::ForceVecd fr_0 = X_rSole_0.dualMul(fr_sensor);
 
-    sva::ForceVecd fl_sensor = robot().forceSensor("LeftFootForceSensor").wrench();
+    //sva::ForceVecd fl_sensor = robot().forceSensor("LeftFootForceSensor").wrench();
+    sva::ForceVecd fl_sensor = robot().bodyWrench("l_ankle");
     sva::ForceVecd fl_0 = X_lSole_0.dualMul(fl_sensor);
 
-    sva::ForceVecd free_sensor = robot().forceSensor("RightHandForceSensor").wrench();
+    sva::ForceVecd free_sensor = robot().bodyWrench("r_wrist");
     sva::ForceVecd free_0 = X_ree_0.dualMul(free_sensor);
 
 
@@ -535,14 +537,15 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
 
   logger().addLogEntry("ZMP_test_calculation", [this]() {
 
-    sva::PTransformd X_rSole_0 = robot().bodyPosW("r_sole").inv();
-    sva::PTransformd X_lSole_0 = robot().bodyPosW("l_sole").inv();
+    sva::PTransformd X_rSole_0 = robot().bodyPosW("r_ankle").inv();
+    sva::PTransformd X_lSole_0 = robot().bodyPosW("l_ankle").inv();
 
 
-    sva::ForceVecd fr_sensor = robot().forceSensor("RightFootForceSensor").wrench();
+    //sva::ForceVecd fr_sensor = robot().forceSensor("RightFootForceSensor").wrench();
+    sva::ForceVecd fr_sensor = robot().bodyWrench("r_ankle");
     sva::ForceVecd fr_0 = X_rSole_0.dualMul(fr_sensor);
 
-    sva::ForceVecd fl_sensor = robot().forceSensor("LeftFootForceSensor").wrench();
+    sva::ForceVecd fl_sensor = robot().bodyWrench("l_ankle");
     sva::ForceVecd fl_0 = X_lSole_0.dualMul(fl_sensor);
 
     double denominator = fr_0.force().z() + fl_0.force().z();
