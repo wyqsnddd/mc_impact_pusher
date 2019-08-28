@@ -27,6 +27,9 @@ void DynamicContactState::start(mc_control::fsm::Controller & ctlInput)
   pushDepth = ctl.config()("states")("Contact")("pushDepth");
   referenceVelocity = ctl.config()("states")("Contact")("contactVelocity");
 
+  ctl.logger().addLogEntry("ee_Vel_target", [this]() { return rPosTaskPtr_->positionTask->refVel(); });
+
+
   currentPos = ctl.robot().mbc().bodyPosW[ctl.robot().bodyIndexByName(efName)].translation();
   // Align hand to vertical wall
   Eigen::Matrix3d desiredRotation;
