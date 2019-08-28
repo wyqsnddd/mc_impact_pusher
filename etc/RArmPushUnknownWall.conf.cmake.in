@@ -139,14 +139,14 @@
   "impact": {
     "constraints": {
       "jointVelocity":{"on": true, "multiplier": 1.0, "debug": true},
-      "jointTorque": {"on": true, "multiplier": 0.5, "debug": true },
+      "jointTorque": {"on": true, "multiplier": 0.4, "debug": true },
       "CoPLeft": false,
       "CoPRight": false,
       "SlippageLeft": false,
       "SlippageRight": false,
-      "frictionWithImpulse": true,
-      "copWithImpulse": {"on": true, "contactArea": [-0.1, 0.1, -0.05, 0.05]},
-      "zmpWithImpulse": {"on": true, "supportPolygon": [-0.12, 0.12, -0.20, 0.20], "allforce": true, "debug": true}
+      "frictionWithImpulse": false,
+      "copWithImpulse": {"on": false, "contactArea": [-0.1, 0.1, -0.05, 0.05]},
+      "zmpWithImpulse": {"on": false, "supportPolygon": [-0.12, 0.12, -0.20, 0.20], "allforce": true, "debug": true}
     },
     "estimation": {
       "coeFrictionDeduction": 0.3,
@@ -172,7 +172,7 @@
     "Contact":
     {
       "base": "DynamicContact", // C++ state
-      "contactVelocity" : [0.4, 0.0, 0.0], //
+      "contactVelocity" : [0.8, 0.0, 0.0], //
       "pushDepth":  [1.0, 0.0, 0.0], // Target position that should generate the impact
       // Velocity control for the end-effector
       "rightEfStiffness": 0.0,

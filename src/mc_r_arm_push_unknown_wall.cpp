@@ -163,6 +163,43 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
                       return zmp;
                     }));
 
+
+  logger().addLogEntry("constraints_jointVelocity_on",
+                       [this]() -> double
+                       {
+                         return static_cast<bool>(config()("impact")("constraints")("jointVelocity")("on"));
+                       });
+  logger().addLogEntry("constraints_jointVelocity_multiplier",
+                       [this]() -> double
+                       {
+                         return config()("impact")("constraints")("jointVelocity")("multiplier");
+                       });
+  logger().addLogEntry("constraints_jointTorque_on",
+                       [this]() -> double
+                       {
+                         return static_cast<bool>(config()("impact")("constraints")("jointTorque")("on"));
+                       });
+  logger().addLogEntry("constraints_jointTorque_multiplier",
+                       [this]() -> double
+                       {
+                         return config()("impact")("constraints")("jointTorque")("multiplier");
+                       });
+  logger().addLogEntry("constraints_frictionWithImpulse_on",
+                       [this]() -> double
+                       {
+                         return static_cast<bool>(config()("impact")("constraints")("frictionWithImpulse"));
+                       });
+  logger().addLogEntry("constraints_copWithImpulse_on",
+                       [this]() -> double
+                       {
+                         return static_cast<bool>(config()("impact")("constraints")("copWithImpulse")("on"));
+                       });
+  logger().addLogEntry("constraints_zmpWithImpulse_on",
+                       [this]() -> double
+                       {
+                         return static_cast<bool>(config()("impact")("constraints")("zmpWithImpulse")("on"));
+                       });
+
   std::string impactBodyString(config()("impact")("estimation")("impactBodyName"));
 
   miOsdPtr_ = std::make_shared<mc_impact::mi_osd>(robot(), true);
