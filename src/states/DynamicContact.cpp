@@ -143,6 +143,7 @@ void DynamicContactState::teardown(mc_control::fsm::Controller & ctl_)
 {
   LOG_SUCCESS("Completed DynamicContactState");
   auto & ctl = static_cast<Controller &>(ctl_);
+  ctl.solver().removeTask(rPosTaskPtr_);
 }
 
 EXPORT_SINGLE_STATE("DynamicContact", DynamicContactState)

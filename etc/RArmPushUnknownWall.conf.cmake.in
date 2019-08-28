@@ -177,11 +177,25 @@
       // Velocity control for the end-effector
       "rightEfStiffness": 0.0,
       "rightEfDamping": 300.0
+    },
+    "MoveHandBack":
+    {
+      "base": "MetaTasks",
+      "tasks":
+      {
+        "MoveRightHand":
+        {
+          "type": "surfaceTransform",
+          "robotIndex": 0,
+          "surface": "RightHandPad"
+        }
+      }
     }
   },
   "init": "Prepare",
   "transitions": [
-    [ "Prepare", "RightHandReady", "Contact", "Auto" ]
+    [ "Prepare", "RightHandReady", "Contact", "Auto" ],
+    [ "Contact", "OK", "MoveHandBack", "Auto" ],
     // [ "Contact", "ok", "Stabilize", "Auto" ]
   ]
 }
