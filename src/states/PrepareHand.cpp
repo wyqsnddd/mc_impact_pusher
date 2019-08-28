@@ -126,8 +126,10 @@ void PrepareHandState::start(mc_control::fsm::Controller & ctlInput)
       return difference;
     });
 
-    ctl.logger().addLogEntry("ZMP_prediction_allforce_constraint", [&ctl]() { return ctl.zmpImpulse_->getZMP_prediction_allforce(); });
-    ctl.logger().addLogEntry("ZMP_prediction_feetforce_constraint", [&ctl]() { return ctl.zmpImpulse_->getZMP_prediction_feetforce(); });
+    ctl.logger().addLogEntry("ZMP_prediction_allforce_constraint",
+                             [&ctl]() { return ctl.zmpImpulse_->getZMP_prediction_allforce(); });
+    ctl.logger().addLogEntry("ZMP_prediction_feetforce_constraint",
+                             [&ctl]() { return ctl.zmpImpulse_->getZMP_prediction_feetforce(); });
 
     ctl.logger().addLogEntry("ZMP_Constraint_test", [&ctl]() {
       Eigen::VectorXd result = ctl.zmpImpulse_->getA() * rbd::dofToVector(ctl.robot().mb(), ctl.robot().mbc().alphaD)
