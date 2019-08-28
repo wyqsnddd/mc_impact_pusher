@@ -61,7 +61,7 @@
   "constraints": [
     {
       "type": "contact"
-    },
+    }
   ],
   "collisions": [
     {
@@ -144,9 +144,9 @@
       "CoPRight": false,
       "SlippageLeft": false,
       "SlippageRight": false,
-      "frictionWithImpulse": false,
-      "copWithImpulse": {"on": false, "contactArea": [-0.1, 0.1, -0.05, 0.05]},
-      "zmpWithImpulse": {"on": false, "supportPolygon": [-0.12, 0.12, -0.20, 0.20], "allforce": true, "debug": true}
+      "frictionWithImpulse": true,
+      "copWithImpulse": {"on": true, "contactArea": [-0.1, 0.1, -0.05, 0.05]},
+      "zmpWithImpulse": {"on": true, "supportPolygon": [-0.12, 0.12, -0.20, 0.20], "allforce": false, "debug": true}
     },
     "estimation": {
       "coeFrictionDeduction": 0.3,
@@ -190,12 +190,37 @@
           "surface": "RightHandPad"
         }
       }
+    },
+    "AdmittanceAfterImpact":
+    {
+      "base": "MetaTasks",
+      "tasks":
+      {
+        "RightHandAdmittance":
+        {
+          "type": "admittance",
+          "robotIndex": 0,
+          "surface": "RightHandPad",
+          "wrench":
+          {
+            "couple": [0.0, 0.0, 0.0],
+            "force": [0.0, 0.0, 15.0]
+          },
+          "admittance":
+          {
+            "couple": [0.0, 0.0, 0.0],
+            "force": [0.0, 0.0, 0.001]
+          },
+          "completion": { "timeout": 10.0 }
+        }
+      }
     }
   },
   "init": "Prepare",
   "transitions": [
     [ "Prepare", "RightHandReady", "Contact", "Auto" ],
-    [ "Contact", "OK", "MoveHandBack", "Auto" ],
+    [ "Contact", "OK", "AdmittanceAfterImpact", "Auto" ],
+    [ "AdmittanceAfterImpact", "OK", "MoveHandBack", "Auto" ]
     // [ "Contact", "ok", "Stabilize", "Auto" ]
   ]
 }
