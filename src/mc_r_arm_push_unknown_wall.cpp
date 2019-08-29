@@ -199,6 +199,13 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
                        {
                          return static_cast<bool>(config()("impact")("constraints")("zmpWithImpulse")("on"));
                        });
+  logger().addLogEntry("constraints_zmpWithImpulse_allforce",
+		  [this]() -> double
+		  {
+		  return static_cast<bool>(config()("impact")("constraints")("zmpWithImpulse")("allforce"));
+		  });
+
+
 
   std::string impactBodyString(config()("impact")("estimation")("impactBodyName"));
 
