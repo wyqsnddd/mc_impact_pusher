@@ -329,6 +329,9 @@ Controller::Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, c
   // logger().addLogEntry("tau", [this]() { return rbd::dofToVector(realRobots().robot().mb(),
   // realRobots().robot().mbc().jointTorque); });
   logger().addLogEntry("tau_QP", [this]() { return rbd::dofToVector(robot().mb(), robot().mbc().jointTorque); });
+  logger().addLogEntry("impulsive_tau_righthand", [this]() { 
+    return (Eigen::VectorXd)(ecQpEstimatorPtr->getImpactModel("r_wrist")->getJacobian().transpose()*robot().bodyWrench("r_wrist").force());
+    });
   //----------------------------- check the joint velocity jump
   //----------------------------- check the impulsive induced jump to COP
 
