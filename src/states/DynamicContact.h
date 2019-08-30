@@ -8,9 +8,8 @@
 #include <mc_impact_constraints/COPInsideContactAreaWithImpulse.h>
 #include <mc_impact_constraints/ZeroSlippageWithImpulse.h>
 
-struct DynamicContactState : mc_control::fsm::State
-{
-  void configure(const mc_rtc::Configuration & config) override;
+struct DynamicContactState : mc_control::fsm::State {
+  void configure(const mc_rtc::Configuration &config) override;
 
   void start(mc_control::fsm::Controller &) override;
 

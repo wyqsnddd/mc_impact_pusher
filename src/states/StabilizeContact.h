@@ -3,9 +3,8 @@
 #include <mc_control/fsm/State.h>
 #include <mc_tasks/AdmittanceTask.h>
 
-struct StabilizeContactState : mc_control::fsm::State
-{
-  void configure(const mc_rtc::Configuration & config) override;
+struct StabilizeContactState : mc_control::fsm::State {
+  void configure(const mc_rtc::Configuration &config) override;
 
   void start(mc_control::fsm::Controller &) override;
 

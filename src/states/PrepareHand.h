@@ -3,9 +3,8 @@
 #include <mc_control/fsm/State.h>
 #include <mc_tasks/EndEffectorTask.h>
 
-struct PrepareHandState : mc_control::fsm::State
-{
-  void configure(const mc_rtc::Configuration & config) override;
+struct PrepareHandState : mc_control::fsm::State {
+  void configure(const mc_rtc::Configuration &config) override;
 
   void start(mc_control::fsm::Controller &) override;
   bool run(mc_control::fsm::Controller &) override;

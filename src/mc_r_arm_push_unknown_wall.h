@@ -14,11 +14,11 @@
 #include <mc_impact_constraints/frictionWithImpulse.h>
 #include <mc_impact_constraints/zmpWithImpulse.h>
 
-struct Controller : public mc_control::fsm::Controller
-{
-  Controller(const mc_rbdyn::RobotModulePtr & rm, const double & dt, const mc_rtc::Configuration & conf);
+struct Controller : public mc_control::fsm::Controller {
+  Controller(const mc_rbdyn::RobotModulePtr &rm, const double &dt,
+             const mc_rtc::Configuration &conf);
 
-  void reset(const mc_control::ControllerResetData & data) override;
+  void reset(const mc_control::ControllerResetData &data) override;
 
   bool run() override;
 
@@ -28,8 +28,10 @@ struct Controller : public mc_control::fsm::Controller
   std::unique_ptr<mc_impact::BoundJointVelocityJump> boundVelocityJump_;
   std::unique_ptr<mc_impact::ZeroSlippageWithImpulse> zeroSlippageLeftFoot_;
   std::unique_ptr<mc_impact::ZeroSlippageWithImpulse> zeroSlippageRightFoot_;
-  std::unique_ptr<mc_impact::COPInsideContactAreaWithImpulse> COPImpulseLeftFoot_;
-  std::unique_ptr<mc_impact::COPInsideContactAreaWithImpulse> COPImpulseRightFoot_;
+  std::unique_ptr<mc_impact::COPInsideContactAreaWithImpulse>
+      COPImpulseLeftFoot_;
+  std::unique_ptr<mc_impact::COPInsideContactAreaWithImpulse>
+      COPImpulseRightFoot_;
   std::unique_ptr<mc_impact::frictionWithImpulse> frictionImpulseRightFoot_;
   std::unique_ptr<mc_impact::frictionWithImpulse> frictionImpulseLeftFoot_;
   std::unique_ptr<mc_impact::copWithImpulse> copImpulseLeftFoot_;
@@ -49,20 +51,14 @@ struct Controller : public mc_control::fsm::Controller
   std::unique_ptr<mc_impact::mi_qpEstimator> osdQpEstimatorPtr;
   std::unique_ptr<mc_impact::mi_qpEstimator> ecQpEstimatorPtr;
 
-  const mc_rbdyn::Contact & getContact(const std::string & s);
+  const mc_rbdyn::Contact &getContact(const std::string &s);
 
-  const std::shared_ptr<mc_impact::mi_osd> getOsd()
-  {
-    return miOsdPtr_;
-  }
+  const std::shared_ptr<mc_impact::mi_osd> getOsd() { return miOsdPtr_; }
 
-  std::shared_ptr<mc_impact::mi_osd> & setOsd()
-  {
-    return miOsdPtr_;
-  }
+  std::shared_ptr<mc_impact::mi_osd> &setOsd() { return miOsdPtr_; }
 
 private:
-  const mc_rbdyn::Robot & realRobot() const;
+  const mc_rbdyn::Robot &realRobot() const;
 
   std::shared_ptr<mc_impact::mi_osd> miOsdPtr_;
   double impactIndicator_;
